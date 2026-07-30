@@ -34,18 +34,18 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-gwcc-dark px-4">
+    <main className="relative min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <span className="text-gwcc-gold font-semibold tracking-widest text-xs uppercase">
             GW Climbing Club
           </span>
-          <h1 className="mt-2 text-2xl font-bold text-gwcc-light">Admin Access</h1>
+          <h1 className="mt-2 text-2xl font-bold text-foreground">Admin Access</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-gwcc-light/70 text-sm">
+            <Label htmlFor="password" className="text-muted-foreground text-sm">
               Password
             </Label>
             <Input
@@ -55,7 +55,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
               autoFocus
-              className="bg-gwcc-navy border-white/10 text-gwcc-light placeholder:text-white/20 focus-visible:ring-gwcc-gold"
+              className="bg-card border-border text-foreground placeholder:text-muted-foreground/50 focus-visible:ring-gwcc-gold"
             />
           </div>
 
@@ -70,7 +70,7 @@ export default function LoginPage() {
           </Button>
         </form>
         <div className="mt-6 text-center">
-          <Link href="/" className="text-gwcc-light/30 hover:text-gwcc-light/60 text-sm transition-colors">
+          <Link href="/" className="text-muted-foreground hover:text-foreground text-sm transition-colors">
             ← Back to site
           </Link>
         </div>

@@ -7,6 +7,7 @@ import { siteConfig } from "@/config/site";
 import { PageTransition } from "@/components/PageTransition";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { PracticeSchedule } from "@/components/PracticeSchedule";
+import { NavLinks } from "@/components/NavLinks";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +20,9 @@ export default async function HomePage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-gwcc-dark flex flex-col">
+      <div className="min-h-screen bg-background flex flex-col">
         {/* Nav */}
-        <header className="px-6 py-5 flex items-center justify-between border-b border-white/8">
+        <header className="px-6 py-5 flex items-center justify-between border-b border-border">
           <Link
             href="/"
             aria-label="GWCC home"
@@ -29,13 +30,7 @@ export default async function HomePage() {
           >
             logo
           </Link>
-          <nav className="flex items-center gap-6 text-sm text-gwcc-light/60">
-            <Link href="/comp" className="hover:text-gwcc-light transition-colors">Comp Team</Link>
-            <Link href="/gallery" className="hover:text-gwcc-light transition-colors">Gallery</Link>
-            <a href={siteConfig.socials.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-gwcc-light transition-colors">
-              Instagram
-            </a>
-          </nav>
+          <NavLinks />
         </header>
 
         {/* Hero with carousel background */}
@@ -51,7 +46,7 @@ export default async function HomePage() {
               priority
               className="w-[22rem] md:w-[30rem] h-auto mx-auto"
             />
-            <div className="text-gwcc-light/40 text-[11px] uppercase tracking-[0.25em]">
+            <div className="text-muted-foreground text-[11px] uppercase tracking-[0.25em]">
               George Washington University Climbing Club
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
@@ -65,7 +60,7 @@ export default async function HomePage() {
               </a>
               <Link
                 href="/comp"
-                className="px-6 py-3 border border-white/20 text-gwcc-light/80 rounded-md hover:border-white/40 hover:text-gwcc-light transition-colors"
+                className="px-6 py-3 border border-border text-foreground/80 rounded-md hover:border-foreground/40 hover:text-foreground transition-colors"
               >
                 Meet the Comp Team
               </Link>
@@ -74,9 +69,9 @@ export default async function HomePage() {
         </section>
 
         {/* Practice times */}
-        <section className="border-t border-white/8 px-6 py-12">
+        <section className="border-t border-border px-6 py-12">
           <div className="max-w-2xl mx-auto">
-            <h2 className="text-gwcc-gold text-xs uppercase tracking-widest font-semibold mb-6 text-center">
+            <h2 className="font-heading text-gwcc-gold text-sm uppercase tracking-widest mb-6 text-center">
               Practice Schedule
             </h2>
             <PracticeSchedule times={siteConfig.practiceTimes} />
@@ -84,9 +79,9 @@ export default async function HomePage() {
         </section>
 
         {/* Footer */}
-        <footer className="border-t border-white/8 px-6 py-5 flex items-center justify-between text-xs text-gwcc-light/25">
+        <footer className="border-t border-border px-6 py-5 flex items-center justify-between text-xs text-muted-foreground">
           <span>© {new Date().getFullYear()} {siteConfig.name}</span>
-          <Link href="/login" className="hover:text-gwcc-light/50 transition-colors">
+          <Link href="/login" className="hover:text-foreground transition-colors">
             Eboard Login
           </Link>
         </footer>

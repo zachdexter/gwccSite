@@ -30,10 +30,10 @@ export function PracticeSchedule({ times }: { times: PracticeTime[] }) {
         <motion.div
           key={p.day}
           variants={item}
-          className="bg-gwcc-navy/60 border border-white/8 rounded-lg px-5 py-4"
+          className="bg-card border border-border rounded-lg px-5 py-4"
         >
-          <div className="text-gwcc-light font-semibold">{p.day}</div>
-          <div className="text-gwcc-light/50 text-sm mt-1">{p.time}</div>
+          <div className="text-card-foreground font-semibold">{p.day}</div>
+          <div className="text-muted-foreground text-sm mt-1">{p.time}</div>
         </motion.div>
       ))}
     </motion.div>

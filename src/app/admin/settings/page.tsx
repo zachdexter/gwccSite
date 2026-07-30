@@ -9,8 +9,8 @@ export default async function SettingsPage() {
   return (
     <div className="max-w-lg mx-auto space-y-6">
       <div>
-        <h1 className="text-xl font-bold text-gwcc-light">Settings</h1>
-        <p className="text-gwcc-light/50 text-sm mt-0.5">Manage login passwords</p>
+        <h1 className="text-xl font-bold text-foreground">Settings</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">Manage login passwords</p>
       </div>
       <SettingsForm />
     </div>

@@ -38,6 +38,7 @@ export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
             transition={{ duration: 1.5, ease: "easeInOut" }}
           />
         </AnimatePresence>
+        {/* photo-relative scrim, intentionally not theme-aware */}
         <div className="absolute inset-0 bg-gradient-to-b from-gwcc-dark/65 via-gwcc-dark/55 to-gwcc-dark/85" />
       </div>
 

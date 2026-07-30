@@ -58,23 +58,23 @@ export default function HeroAdminPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       <div>
-        <h1 className="text-xl font-bold text-gwcc-light">Home Page Carousel</h1>
-        <p className="text-gwcc-light/50 text-sm mt-0.5">
+        <h1 className="text-xl font-bold text-foreground">Home Page Carousel</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">
           Select photos from the gallery to show in the hero rotation.{" "}
           <span className="text-gwcc-gold">{heroCount} selected</span>
         </p>
       </div>
 
       {loading ? (
-        <div className="text-center py-20 text-gwcc-light/40">Loading…</div>
+        <div className="text-center py-20 text-muted-foreground">Loading…</div>
       ) : photos.length === 0 ? (
-        <div className="text-center py-20 text-gwcc-light/40">
+        <div className="text-center py-20 text-muted-foreground">
           No gallery photos yet. Sync from Drive or upload photos in the Gallery admin.
         </div>
       ) : (
         Object.entries(grouped).map(([albumName, albumPhotos]) => (
           <div key={albumName}>
-            <h2 className="text-gwcc-light/60 text-xs uppercase tracking-widest font-semibold mb-3">
+            <h2 className="text-muted-foreground text-xs uppercase tracking-widest font-semibold mb-3">
               {albumName}
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
@@ -83,10 +83,10 @@ export default function HeroAdminPage() {
                   key={photo.id}
                   onClick={() => toggleHero(photo)}
                   disabled={toggling === photo.id}
-                  className={`group relative aspect-square rounded-lg overflow-hidden bg-gwcc-navy border-2 transition-all ${
+                  className={`group relative aspect-square rounded-lg overflow-hidden bg-card border-2 transition-all ${
                     photo.showInHero
                       ? "border-gwcc-gold shadow-[0_0_0_1px_#dbd29b33]"
-                      : "border-white/10 hover:border-white/30"
+                      : "border-border hover:border-foreground/30"
                   }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}

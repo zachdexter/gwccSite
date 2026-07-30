@@ -12,7 +12,7 @@ export default async function AdminLayout({
   if (!session) redirect("/login");
 
   return (
-    <div className="min-h-screen flex flex-col bg-gwcc-dark">
+    <div className="min-h-screen flex flex-col bg-background">
       <header className="bg-gwcc-navy border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <form
           action={async () => {

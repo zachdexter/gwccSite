@@ -105,8 +105,8 @@ export default function MembersPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gwcc-light">Members</h1>
-          <p className="text-gwcc-light/50 text-sm mt-0.5">
+          <h1 className="text-xl font-bold text-foreground">Members</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
             {members.filter((m) => m.isActive).length} active · {subsidizedCount} subsidized
           </p>
         </div>
@@ -119,25 +119,25 @@ export default function MembersPage() {
       </div>
 
       {showAdd && (
-        <form onSubmit={addMember} className="bg-gwcc-navy border border-white/10 rounded-lg p-4 space-y-4">
-          <h2 className="text-gwcc-light font-semibold">New Member</h2>
+        <form onSubmit={addMember} className="bg-card border border-border rounded-lg p-4 space-y-4">
+          <h2 className="text-foreground font-semibold">New Member</h2>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-gwcc-light/70 text-xs">Name *</Label>
+              <Label className="text-muted-foreground text-xs">Name *</Label>
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                className="bg-gwcc-dark border-white/10 text-gwcc-light"
+                className="bg-muted border-border text-foreground"
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-gwcc-light/70 text-xs">Email</Label>
+              <Label className="text-muted-foreground text-xs">Email</Label>
               <Input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 type="email"
-                className="bg-gwcc-dark border-white/10 text-gwcc-light"
+                className="bg-muted border-border text-foreground"
               />
             </div>
           </div>
@@ -148,11 +148,11 @@ export default function MembersPage() {
               onChange={(e) => setIsSubsidized(e.target.checked)}
               className="accent-gwcc-gold"
             />
-            <span className="text-gwcc-light/70 text-sm">Subsidized membership</span>
+            <span className="text-muted-foreground text-sm">Subsidized membership</span>
           </label>
           <div className="flex gap-2">
             <Button type="submit" className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90">Add</Button>
-            <Button type="button" variant="ghost" onClick={() => setShowAdd(false)} className="text-gwcc-light/60">
+            <Button type="button" variant="ghost" onClick={() => setShowAdd(false)} className="text-muted-foreground">
               Cancel
             </Button>
           </div>
@@ -163,32 +163,32 @@ export default function MembersPage() {
         placeholder="Search members…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        className="bg-gwcc-navy border-white/10 text-gwcc-light placeholder:text-white/25"
+        className="bg-card border-border text-foreground placeholder:text-muted-foreground/60"
       />
 
-      <div className="rounded-lg border border-white/10 overflow-hidden">
+      <div className="rounded-lg border border-border overflow-hidden">
         {loading ? (
-          <div className="text-center py-12 text-gwcc-light/40">Loading…</div>
+          <div className="text-center py-12 text-muted-foreground">Loading…</div>
         ) : active.length === 0 ? (
-          <div className="text-center py-12 text-gwcc-light/40">No members found.</div>
+          <div className="text-center py-12 text-muted-foreground">No members found.</div>
         ) : (
           active.map((member) => {
             const stats = missStats.get(member.id);
             return (
               <div
                 key={member.id}
-                className="flex items-center justify-between px-4 py-3 border-b border-white/5 hover:bg-white/2 transition-colors"
+                className="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-muted/40 transition-colors"
               >
                 <Link href={`/admin/members/${member.id}`} className="flex flex-col gap-0.5 hover:opacity-80 transition-opacity">
                   <div className="flex items-center gap-3">
-                    <span className="text-gwcc-light text-sm font-medium">{member.name}</span>
+                    <span className="text-foreground text-sm font-medium">{member.name}</span>
                     {member.isSubsidized && (
                       <Badge className="bg-gwcc-gold/15 text-gwcc-gold border-gwcc-gold/30 border text-xs">
                         subsidized
                       </Badge>
                     )}
                     {member.email && (
-                      <span className="text-gwcc-light/30 text-xs hidden sm:block">{member.email}</span>
+                      <span className="text-muted-foreground text-xs hidden sm:block">{member.email}</span>
                     )}
                   </div>
                   {stats && (
@@ -196,7 +196,7 @@ export default function MembersPage() {
                       <span className="text-xs text-yellow-400/70">
                         1-day miss: {stats.missedOneDayCount}
                       </span>
-                      <span className="text-gwcc-light/20 text-xs">·</span>
+                      <span className="text-muted-foreground text-xs">·</span>
                       <span className="text-xs text-red-400/70">
                         Both days: {stats.missedBothDaysCount}
                       </span>
@@ -206,13 +206,13 @@ export default function MembersPage() {
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => toggleSubsidized(member)}
-                    className="text-xs text-gwcc-light/40 hover:text-gwcc-gold transition-colors"
+                    className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors"
                   >
                     {member.isSubsidized ? "Remove subsidy" : "Add subsidy"}
                   </button>
                   <button
                     onClick={() => deactivate(member)}
-                    className="text-xs text-gwcc-light/30 hover:text-red-400 transition-colors ml-2"
+                    className="text-xs text-muted-foreground hover:text-red-400 transition-colors ml-2"
                   >
                     Remove
                   </button>

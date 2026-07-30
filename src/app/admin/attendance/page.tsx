@@ -133,14 +133,14 @@ export default function AttendancePage() {
   );
 
   if (loading) {
-    return <div className="text-gwcc-light/50 text-center py-20">Loading…</div>;
+    return <div className="text-muted-foreground text-center py-20">Loading…</div>;
   }
 
   return (
     <div className="max-w-lg mx-auto space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-gwcc-light">Check-in</h1>
-        <p className="text-gwcc-light/50 text-sm mt-0.5">Tap a member to log attendance</p>
+        <h1 className="text-xl font-bold text-foreground">Check-in</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">Tap a member to log attendance</p>
       </div>
 
       <Input
@@ -148,12 +148,12 @@ export default function AttendancePage() {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         autoFocus
-        className="bg-gwcc-navy border-white/10 text-gwcc-light placeholder:text-white/25 focus-visible:ring-gwcc-gold text-base h-12"
+        className="bg-card border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-gwcc-gold text-base h-12"
       />
 
       <div className="space-y-2">
         {filtered.length === 0 && (
-          <p className="text-gwcc-light/40 text-center py-8">No members found.</p>
+          <p className="text-muted-foreground text-center py-8">No members found.</p>
         )}
         {filtered.map((member) => {
           const count = getThisWeekCount(member.id);
@@ -162,10 +162,10 @@ export default function AttendancePage() {
             <button
               key={member.id}
               onClick={() => logAttendance(member)}
-              className="w-full flex items-center justify-between bg-gwcc-navy border border-white/10 rounded-lg px-4 py-4 hover:border-gwcc-gold/40 hover:bg-gwcc-navy/80 active:scale-[0.99] transition-all text-left"
+              className="w-full flex items-center justify-between bg-card border border-border rounded-lg px-4 py-4 hover:border-gwcc-gold/40 hover:bg-muted active:scale-[0.99] transition-all text-left"
             >
               <div>
-                <span className="text-gwcc-light font-medium">{member.name}</span>
+                <span className="text-foreground font-medium">{member.name}</span>
                 {member.isSubsidized && (
                   <span className="ml-2 text-xs text-gwcc-gold/70">subsidized</span>
                 )}
@@ -181,7 +181,7 @@ export default function AttendancePage() {
                       ? "bg-emerald-500/15 text-emerald-400"
                       : count === 1
                       ? "bg-amber-500/15 text-amber-400"
-                      : "bg-white/5 text-gwcc-light/30"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   {count}×

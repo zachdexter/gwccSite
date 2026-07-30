@@ -127,7 +127,7 @@ function MemberDetailPage() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto py-12 text-center text-gwcc-light/40">
+      <div className="max-w-2xl mx-auto py-12 text-center text-muted-foreground">
         Loading…
       </div>
     );
@@ -135,7 +135,7 @@ function MemberDetailPage() {
 
   if (!member) {
     return (
-      <div className="max-w-2xl mx-auto py-12 text-center text-gwcc-light/40">
+      <div className="max-w-2xl mx-auto py-12 text-center text-muted-foreground">
         Member not found.
       </div>
     );
@@ -145,14 +145,14 @@ function MemberDetailPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <Link
         href={backHref}
-        className="text-gwcc-light/40 hover:text-gwcc-light text-sm transition-colors"
+        className="text-muted-foreground hover:text-foreground text-sm transition-colors"
       >
         {backLabel}
       </Link>
 
       <div className="space-y-1">
         <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-xl font-bold text-gwcc-light">{member.name}</h1>
+          <h1 className="text-xl font-bold text-foreground">{member.name}</h1>
           {member.isSubsidized && (
             <Badge className="bg-gwcc-gold/15 text-gwcc-gold border-gwcc-gold/30 border text-xs">
               subsidized
@@ -165,9 +165,9 @@ function MemberDetailPage() {
           )}
         </div>
         {member.email && (
-          <p className="text-gwcc-light/50 text-sm">{member.email}</p>
+          <p className="text-muted-foreground text-sm">{member.email}</p>
         )}
-        <p className="text-gwcc-light/30 text-xs">
+        <p className="text-muted-foreground text-xs">
           Joined{" "}
           {new Date(member.createdAt).toLocaleDateString("en-US", {
             month: "long",
@@ -178,12 +178,12 @@ function MemberDetailPage() {
       </div>
 
       {activeSemester ? (
-        <div className="bg-gwcc-navy border border-white/10 rounded-lg p-4 space-y-3">
+        <div className="bg-card border border-border rounded-lg p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <h2 className="text-gwcc-light font-semibold text-sm">
+            <h2 className="text-card-foreground font-semibold text-sm">
               {activeSemester.name}
             </h2>
-            <span className="text-gwcc-light/40 text-xs">
+            <span className="text-muted-foreground text-xs">
               {activeSemester.attendanceCount} sessions
             </span>
           </div>
@@ -214,7 +214,7 @@ function MemberDetailPage() {
               return (
                 <div key={i} className="flex items-center gap-3">
                   <span className={`text-xs ${color}`}>●</span>
-                  <span className="text-gwcc-light/40 text-xs w-28">{label}</span>
+                  <span className="text-muted-foreground text-xs w-28">{label}</span>
                   <span className={`text-xs ${color}`}>{count}/2</span>
                 </div>
               );
@@ -222,36 +222,36 @@ function MemberDetailPage() {
           </div>
         </div>
       ) : (
-        <div className="bg-gwcc-navy border border-white/10 rounded-lg p-4 text-gwcc-light/40 text-sm">
+        <div className="bg-card border border-border rounded-lg p-4 text-muted-foreground text-sm">
           No active semester.
         </div>
       )}
 
       {semesters.length > 0 && (
-        <div className="rounded-lg border border-white/10 overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/10">
-            <h2 className="text-gwcc-light font-semibold text-sm">
+        <div className="rounded-lg border border-border overflow-hidden">
+          <div className="px-4 py-2.5 border-b border-border">
+            <h2 className="text-foreground font-semibold text-sm">
               Attendance by Semester
             </h2>
           </div>
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/5">
-                <th className="text-left px-4 py-2 text-gwcc-light/40 text-xs font-normal">
+              <tr className="border-b border-border">
+                <th className="text-left px-4 py-2 text-muted-foreground text-xs font-normal">
                   Semester
                 </th>
-                <th className="text-right px-4 py-2 text-gwcc-light/40 text-xs font-normal">
+                <th className="text-right px-4 py-2 text-muted-foreground text-xs font-normal">
                   Sessions
                 </th>
-                <th className="text-right px-4 py-2 text-gwcc-light/40 text-xs font-normal hidden sm:table-cell">
+                <th className="text-right px-4 py-2 text-muted-foreground text-xs font-normal hidden sm:table-cell">
                   Date Range
                 </th>
               </tr>
             </thead>
             <tbody>
               {semesters.map((s) => (
-                <tr key={s.id} className="border-b border-white/5 last:border-0">
-                  <td className="px-4 py-2.5 text-gwcc-light text-sm">
+                <tr key={s.id} className="border-b border-border last:border-0">
+                  <td className="px-4 py-2.5 text-foreground text-sm">
                     <div className="flex items-center gap-2">
                       {s.name}
                       {s.isActive && (
@@ -261,10 +261,10 @@ function MemberDetailPage() {
                       )}
                     </div>
                   </td>
-                  <td className="px-4 py-2.5 text-gwcc-light/70 text-sm text-right">
+                  <td className="px-4 py-2.5 text-muted-foreground text-sm text-right">
                     {s.attendanceCount}
                   </td>
-                  <td className="px-4 py-2.5 text-gwcc-light/40 text-xs text-right hidden sm:table-cell">
+                  <td className="px-4 py-2.5 text-muted-foreground text-xs text-right hidden sm:table-cell">
                     {new Date(s.startDate).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
@@ -283,22 +283,22 @@ function MemberDetailPage() {
         </div>
       )}
 
-      <div className="rounded-lg border border-white/10 overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/10 flex items-center justify-between">
-          <h2 className="text-gwcc-light font-semibold text-sm">All Logs</h2>
-          <span className="text-gwcc-light/30 text-xs">{logs.length} total</span>
+      <div className="rounded-lg border border-border overflow-hidden">
+        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+          <h2 className="text-foreground font-semibold text-sm">All Logs</h2>
+          <span className="text-muted-foreground text-xs">{logs.length} total</span>
         </div>
 
         {role === "president" && (
           <form
             onSubmit={addLog}
-            className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-gwcc-navy/50"
+            className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted"
           >
             <Input
               type="date"
               value={addDate}
               onChange={(e) => setAddDate(e.target.value)}
-              className="bg-gwcc-dark border-white/10 text-gwcc-light text-sm h-8 w-40"
+              className="bg-card border-border text-foreground text-sm h-8 w-40"
             />
             <Button
               type="submit"
@@ -311,7 +311,7 @@ function MemberDetailPage() {
         )}
 
         {logs.length === 0 ? (
-          <div className="text-center py-8 text-gwcc-light/40 text-sm">
+          <div className="text-center py-8 text-muted-foreground text-sm">
             No attendance logs.
           </div>
         ) : (
@@ -320,28 +320,28 @@ function MemberDetailPage() {
             return (
               <div
                 key={log.id}
-                className="flex items-center justify-between px-4 py-2.5 border-b border-white/5 last:border-0"
+                className="flex items-center justify-between px-4 py-2.5 border-b border-border last:border-0"
               >
                 <div className="flex items-center gap-4">
-                  <span className="text-gwcc-light text-sm">
+                  <span className="text-foreground text-sm">
                     {d.toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
                       year: "numeric",
                     })}
                   </span>
-                  <span className="text-gwcc-light/40 text-xs">
+                  <span className="text-muted-foreground text-xs">
                     {d.toLocaleTimeString("en-US", {
                       hour: "numeric",
                       minute: "2-digit",
                     })}
                   </span>
-                  <span className="text-gwcc-light/30 text-xs">{log.loggedBy}</span>
+                  <span className="text-muted-foreground text-xs">{log.loggedBy}</span>
                 </div>
                 {role === "president" && (
                   <button
                     onClick={() => removeLog(log)}
-                    className="text-gwcc-light/20 hover:text-red-400 transition-colors text-lg leading-none"
+                    className="text-muted-foreground hover:text-red-400 transition-colors text-lg leading-none"
                   >
                     ×
                   </button>

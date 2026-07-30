@@ -158,14 +158,14 @@ export default function GalleryAdminPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={backToAlbums}
-              className="text-gwcc-light/40 hover:text-gwcc-light text-sm transition-colors"
+              className="text-muted-foreground hover:text-foreground text-sm transition-colors"
             >
               ← Albums
             </button>
-            <span className="text-gwcc-light/20">·</span>
+            <span className="text-muted-foreground">·</span>
             <div>
-              <h1 className="text-xl font-bold text-gwcc-light">{selectedAlbum.name}</h1>
-              <p className="text-gwcc-light/50 text-sm mt-0.5">{photos.length} photos</p>
+              <h1 className="text-xl font-bold text-foreground">{selectedAlbum.name}</h1>
+              <p className="text-muted-foreground text-sm mt-0.5">{photos.length} photos</p>
             </div>
           </div>
           <div>
@@ -188,7 +188,7 @@ export default function GalleryAdminPage() {
         </div>
 
         {photos.length === 0 ? (
-          <div className="text-center py-20 text-gwcc-light/40">
+          <div className="text-center py-20 text-muted-foreground">
             No photos yet. Upload some to get started.
           </div>
         ) : (
@@ -196,7 +196,7 @@ export default function GalleryAdminPage() {
             {photos.map((photo) => (
               <div
                 key={photo.id}
-                className="group relative aspect-square rounded-lg overflow-hidden bg-gwcc-navy border border-white/10"
+                className="group relative aspect-square rounded-lg overflow-hidden bg-card border border-border"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -224,15 +224,15 @@ export default function GalleryAdminPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gwcc-light">Gallery</h1>
-          <p className="text-gwcc-light/50 text-sm mt-0.5">{albums.length} albums</p>
+          <h1 className="text-xl font-bold text-foreground">Gallery</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">{albums.length} albums</p>
         </div>
         <div className="flex gap-2">
           <Button
             onClick={syncFromDrive}
             disabled={syncing}
             variant="outline"
-            className="border-white/20 text-gwcc-light/70 hover:border-white/40 hover:text-gwcc-light"
+            className="border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
           >
             {syncing ? "Syncing…" : "Sync from Drive"}
           </Button>
@@ -248,27 +248,27 @@ export default function GalleryAdminPage() {
       {showAddAlbum && (
         <form
           onSubmit={createAlbum}
-          className="bg-gwcc-navy border border-white/10 rounded-lg p-4 space-y-4"
+          className="bg-card border border-border rounded-lg p-4 space-y-4"
         >
-          <h2 className="text-gwcc-light font-semibold">New Album</h2>
+          <h2 className="text-card-foreground font-semibold">New Album</h2>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-gwcc-light/70 text-xs">Name *</Label>
+              <Label className="text-muted-foreground text-xs">Name *</Label>
               <Input
                 value={albumName}
                 onChange={(e) => setAlbumName(e.target.value)}
                 required
                 placeholder="e.g. Spring 2025"
-                className="bg-gwcc-dark border-white/10 text-gwcc-light"
+                className="bg-muted border-border text-foreground"
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-gwcc-light/70 text-xs">Description</Label>
+              <Label className="text-muted-foreground text-xs">Description</Label>
               <Input
                 value={albumDesc}
                 onChange={(e) => setAlbumDesc(e.target.value)}
                 placeholder="Optional"
-                className="bg-gwcc-dark border-white/10 text-gwcc-light"
+                className="bg-muted border-border text-foreground"
               />
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function GalleryAdminPage() {
               type="button"
               variant="ghost"
               onClick={() => setShowAddAlbum(false)}
-              className="text-gwcc-light/60"
+              className="text-muted-foreground"
             >
               Cancel
             </Button>
@@ -289,7 +289,7 @@ export default function GalleryAdminPage() {
       )}
 
       {albums.length === 0 ? (
-        <div className="text-center py-20 text-gwcc-light/40">
+        <div className="text-center py-20 text-muted-foreground">
           No albums yet. Create one to start uploading photos.
         </div>
       ) : (
@@ -297,10 +297,10 @@ export default function GalleryAdminPage() {
           {albums.map((album) => (
             <div
               key={album.id}
-              className="group rounded-lg overflow-hidden border border-white/10 bg-gwcc-navy cursor-pointer hover:border-gwcc-gold/30 transition-colors"
+              className="group rounded-lg overflow-hidden border border-border bg-card cursor-pointer hover:border-gwcc-gold/30 transition-colors"
               onClick={() => openAlbum(album)}
             >
-              <div className="aspect-video bg-gwcc-dark relative overflow-hidden">
+              <div className="aspect-video bg-muted relative overflow-hidden">
                 {album.coverPhotoUrl ? (
                   /* eslint-disable-next-line @next/next/no-img-element */
                   <img
@@ -309,7 +309,7 @@ export default function GalleryAdminPage() {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gwcc-light/20 text-xs">
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                     No photos
                   </div>
                 )}
@@ -323,8 +323,8 @@ export default function GalleryAdminPage() {
                 </div>
               </div>
               <div className="px-3 py-2.5">
-                <p className="text-gwcc-light font-medium text-sm">{album.name}</p>
-                <p className="text-gwcc-light/40 text-xs mt-0.5">{album.photoCount} photos</p>
+                <p className="text-card-foreground font-medium text-sm">{album.name}</p>
+                <p className="text-muted-foreground text-xs mt-0.5">{album.photoCount} photos</p>
               </div>
             </div>
           ))}

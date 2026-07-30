@@ -42,40 +42,40 @@ function PasswordForm({ title, role, requireCurrent }: PasswordFormProps) {
   }
 
   return (
-    <div className="bg-gwcc-navy border border-white/10 rounded-lg p-4 space-y-4">
-      <h2 className="text-gwcc-light font-semibold">{title}</h2>
+    <div className="bg-card border border-border rounded-lg p-4 space-y-4">
+      <h2 className="text-card-foreground font-semibold">{title}</h2>
       <form onSubmit={handleSubmit} className="space-y-3">
         {requireCurrent && (
           <div className="space-y-1">
-            <Label className="text-gwcc-light/70 text-xs">Current Password</Label>
+            <Label className="text-muted-foreground text-xs">Current Password</Label>
             <Input
               type="password"
               value={current}
               onChange={(e) => setCurrent(e.target.value)}
               required
-              className="bg-gwcc-dark border-white/10 text-gwcc-light"
+              className="bg-muted border-border text-foreground"
             />
           </div>
         )}
         <div className="space-y-1">
-          <Label className="text-gwcc-light/70 text-xs">New Password</Label>
+          <Label className="text-muted-foreground text-xs">New Password</Label>
           <Input
             type="password"
             value={next}
             onChange={(e) => setNext(e.target.value)}
             required
             minLength={8}
-            className="bg-gwcc-dark border-white/10 text-gwcc-light"
+            className="bg-muted border-border text-foreground"
           />
         </div>
         <div className="space-y-1">
-          <Label className="text-gwcc-light/70 text-xs">Confirm New Password</Label>
+          <Label className="text-muted-foreground text-xs">Confirm New Password</Label>
           <Input
             type="password"
             value={confirm}
             onChange={(e) => setConfirm(e.target.value)}
             required
-            className="bg-gwcc-dark border-white/10 text-gwcc-light"
+            className="bg-muted border-border text-foreground"
           />
         </div>
         <Button

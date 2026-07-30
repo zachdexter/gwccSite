@@ -1,0 +1,17 @@
+import { auth } from "@/auth";
+import { NextResponse } from "next/server";
+import { uploadToCloudinary } from "@/lib/cloudinary";
+
+export async function POST(req: Request) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const formData = await req.formData();
+  const file = formData.get("file") as File | null;
+  if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const { secure_url } = await uploadToCloudinary(buffer, "gwcc/comp-headshots", file.name);
+
+  return NextResponse.json({ secureUrl: secure_url });
+}

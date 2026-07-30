@@ -14,7 +14,7 @@ export default function NavMenuButton({ role }: { role?: string }) {
       <Button
         variant="ghost"
         size="sm"
-        className="text-gwcc-light/60 hover:text-gwcc-light gap-1.5"
+        className="text-gwcc-light/60 hover:text-gwcc-light hover:bg-white/10 gap-1.5"
         onClick={() => setOpen(true)}
       >
         <Menu className="w-4 h-4" />
@@ -22,9 +22,9 @@ export default function NavMenuButton({ role }: { role?: string }) {
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-gwcc-dark border-white/10 sm:max-w-lg">
+        <DialogContent className="bg-popover border-border sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-gwcc-light">Navigation</DialogTitle>
+            <DialogTitle className="text-popover-foreground">Navigation</DialogTitle>
           </DialogHeader>
           <AdminToolGrid role={role} onNavigate={() => setOpen(false)} />
         </DialogContent>

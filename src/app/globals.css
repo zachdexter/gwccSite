@@ -9,7 +9,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-bebas);
 
   /* GWCC palette utilities */
   --color-gwcc-navy: #0f3559;
@@ -48,7 +48,38 @@
 }
 
 :root {
-  /* GWCC dark theme as default */
+  /* GWCC light theme (new default) */
+  --background: #eae6e3;
+  --foreground: #23262b;
+  --card: #ffffff;
+  --card-foreground: #23262b;
+  --popover: #ffffff;
+  --popover-foreground: #23262b;
+  --primary: #dbd29b;
+  --primary-foreground: #0f3559;
+  --secondary: #ddd7cf;
+  --secondary-foreground: #23262b;
+  --muted: #e3ddd6;
+  --muted-foreground: #6b7078;
+  --accent: #dbd29b;
+  --accent-foreground: #0f3559;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: rgba(15, 53, 89, 0.14);
+  --input: rgba(15, 53, 89, 0.08);
+  --ring: #dbd29b;
+  --radius: 0.5rem;
+  --sidebar: #0f3559;
+  --sidebar-foreground: #eae6e3;
+  --sidebar-primary: #dbd29b;
+  --sidebar-primary-foreground: #0f3559;
+  --sidebar-accent: #ddd7cf;
+  --sidebar-accent-foreground: #23262b;
+  --sidebar-border: rgba(15, 53, 89, 0.12);
+  --sidebar-ring: #dbd29b;
+}
+
+.dark {
+  /* GWCC dark theme (unchanged from before) */
   --background: #1e293d;
   --foreground: #eae6e3;
   --card: #0f3559;
@@ -67,7 +98,6 @@
   --border: rgba(234, 230, 227, 0.12);
   --input: rgba(234, 230, 227, 0.08);
   --ring: #dbd29b;
-  --radius: 0.5rem;
   --sidebar: #0f3559;
   --sidebar-foreground: #eae6e3;
   --sidebar-primary: #dbd29b;

@@ -33,9 +33,9 @@ export function AlbumGrid({ albums }: { albums: Album[] }) {
         <motion.div key={album.id} variants={item}>
           <Link
             href={`/gallery/${album.id}`}
-            className="group block rounded-lg overflow-hidden border border-white/8 bg-gwcc-navy hover:border-gwcc-gold/30 transition-colors"
+            className="group block rounded-lg overflow-hidden border border-border bg-card hover:border-gwcc-gold/30 transition-colors"
           >
-            <div className="aspect-video bg-gwcc-dark overflow-hidden">
+            <div className="aspect-video bg-muted overflow-hidden">
               {album.coverPhotoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -45,14 +45,14 @@ export function AlbumGrid({ albums }: { albums: Album[] }) {
                   loading="lazy"
                 />
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-gwcc-light/20 text-xs">
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                   No photos
                 </div>
               )}
             </div>
             <div className="px-3 py-2.5">
-              <p className="text-gwcc-light font-medium text-sm">{album.name}</p>
-              <p className="text-gwcc-light/40 text-xs mt-0.5">{album.photoCount} photos</p>
+              <p className="text-card-foreground font-medium text-sm">{album.name}</p>
+              <p className="text-muted-foreground text-xs mt-0.5">{album.photoCount} photos</p>
             </div>
           </Link>
         </motion.div>

@@ -64,12 +64,12 @@ export default function AdminToolGrid({ role, onNavigate }: AdminToolGridProps) 
           key={href}
           href={href}
           onClick={onNavigate}
-          className="flex flex-col items-center justify-center gap-3 rounded-xl border border-white/10 bg-gwcc-navy/60 hover:bg-gwcc-navy hover:border-gwcc-gold/30 p-6 text-center transition-colors group"
+          className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card hover:bg-muted hover:border-gwcc-gold/30 p-6 text-center transition-colors group"
         >
           <Icon className="w-8 h-8 text-gwcc-gold/80 group-hover:text-gwcc-gold transition-colors" />
           <div>
-            <p className="text-gwcc-light font-semibold text-sm">{label}</p>
-            <p className="text-gwcc-light/40 text-xs mt-0.5">{description}</p>
+            <p className="text-card-foreground font-semibold text-sm">{label}</p>
+            <p className="text-muted-foreground text-xs mt-0.5">{description}</p>
           </div>
         </Link>
       ))}

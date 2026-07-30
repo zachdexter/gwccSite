@@ -104,8 +104,8 @@ export default function SemestersPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gwcc-light">Semesters</h1>
-          <p className="text-gwcc-light/50 text-sm mt-0.5">
+          <h1 className="text-xl font-bold text-foreground">Semesters</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
             Set date ranges for attendance tracking
           </p>
         </div>
@@ -118,51 +118,51 @@ export default function SemestersPage() {
       </div>
 
       {showAdd && (
-        <form onSubmit={addSemester} className="bg-gwcc-navy border border-white/10 rounded-lg p-4 space-y-4">
-          <h2 className="text-gwcc-light font-semibold">New Semester</h2>
+        <form onSubmit={addSemester} className="bg-card border border-border rounded-lg p-4 space-y-4">
+          <h2 className="text-card-foreground font-semibold">New Semester</h2>
           <div className="space-y-1">
-            <Label className="text-gwcc-light/70 text-xs">Name (e.g. Fall 2025)</Label>
+            <Label className="text-muted-foreground text-xs">Name (e.g. Fall 2025)</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="bg-gwcc-dark border-white/10 text-gwcc-light"
+              className="bg-muted border-border text-foreground"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label className="text-gwcc-light/70 text-xs">Start Date</Label>
+              <Label className="text-muted-foreground text-xs">Start Date</Label>
               <Input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 required
-                className="bg-gwcc-dark border-white/10 text-gwcc-light"
+                className="bg-muted border-border text-foreground"
               />
             </div>
             <div className="space-y-1">
-              <Label className="text-gwcc-light/70 text-xs">End Date</Label>
+              <Label className="text-muted-foreground text-xs">End Date</Label>
               <Input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
                 required
-                className="bg-gwcc-dark border-white/10 text-gwcc-light"
+                className="bg-muted border-border text-foreground"
               />
             </div>
           </div>
           <div className="flex gap-2">
             <Button type="submit" className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90">Create</Button>
-            <Button type="button" variant="ghost" onClick={() => setShowAdd(false)} className="text-gwcc-light/60">
+            <Button type="button" variant="ghost" onClick={() => setShowAdd(false)} className="text-muted-foreground">
               Cancel
             </Button>
           </div>
         </form>
       )}
 
-      <div className="rounded-lg border border-white/10 overflow-hidden">
+      <div className="rounded-lg border border-border overflow-hidden">
         {semesters.length === 0 ? (
-          <div className="text-center py-12 text-gwcc-light/40">No semesters yet.</div>
+          <div className="text-center py-12 text-muted-foreground">No semesters yet.</div>
         ) : (
           [...semesters].reverse().map((semester) => {
             const isExpanded = expandedId === semester.id;
@@ -175,24 +175,24 @@ export default function SemestersPage() {
                 )
               : [];
             return (
-              <div key={semester.id} className="border-b border-white/5">
-                <div className="flex items-center justify-between px-4 py-4 hover:bg-white/2 transition-colors">
+              <div key={semester.id} className="border-b border-border">
+                <div className="flex items-center justify-between px-4 py-4 hover:bg-muted/40 transition-colors">
                   <button
                     onClick={() => toggleExpand(semester.id)}
                     className="flex-1 text-left space-y-0.5"
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-gwcc-light font-medium">{semester.name}</span>
+                      <span className="text-foreground font-medium">{semester.name}</span>
                       {semester.isActive && (
                         <Badge className="bg-emerald-500/15 text-emerald-400 border-emerald-500/30 border text-xs">
                           Active
                         </Badge>
                       )}
-                      <span className="text-gwcc-light/30 text-xs ml-1">
+                      <span className="text-muted-foreground text-xs ml-1">
                         {isExpanded ? "▲" : "▼"}
                       </span>
                     </div>
-                    <div className="text-gwcc-light/40 text-xs">
+                    <div className="text-muted-foreground text-xs">
                       {semester.startDate} → {semester.endDate}
                     </div>
                   </button>
@@ -208,7 +208,7 @@ export default function SemestersPage() {
                     {!semester.isActive && (
                       <button
                         onClick={() => deleteSemester(semester.id, semester.name)}
-                        className="text-xs text-gwcc-light/30 hover:text-red-400 transition-colors"
+                        className="text-xs text-muted-foreground hover:text-red-400 transition-colors"
                       >
                         Delete
                       </button>
@@ -219,15 +219,15 @@ export default function SemestersPage() {
                 {isExpanded && (
                   <div className="px-4 pb-4">
                     {summary === "loading" ? (
-                      <div className="text-gwcc-light/40 text-sm py-2">Loading summary…</div>
+                      <div className="text-muted-foreground text-sm py-2">Loading summary…</div>
                     ) : summary ? (
-                      <div className="rounded-md border border-white/10 overflow-hidden">
-                        <div className="px-3 py-2 bg-white/5 text-gwcc-light/50 text-xs flex gap-4">
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <div className="px-3 py-2 bg-muted text-muted-foreground text-xs flex gap-4">
                           <span>{summary.totalWeeks} weeks tracked</span>
                         </div>
                         <table className="w-full text-sm">
                           <thead>
-                            <tr className="border-b border-white/10 text-gwcc-light/40 text-xs">
+                            <tr className="border-b border-border text-muted-foreground text-xs">
                               <th className="text-left px-3 py-2">Member</th>
                               <th className="text-center px-3 py-2">Missed 1 Day</th>
                               <th className="text-center px-3 py-2">Missed Both</th>
@@ -237,7 +237,7 @@ export default function SemestersPage() {
                           <tbody>
                             {sortedMembers.length === 0 ? (
                               <tr>
-                                <td colSpan={4} className="text-center text-gwcc-light/30 text-xs py-4">
+                                <td colSpan={4} className="text-center text-muted-foreground text-xs py-4">
                                   No members found
                                 </td>
                               </tr>
@@ -245,8 +245,8 @@ export default function SemestersPage() {
                               sortedMembers.map((m) => {
                                 const total = m.missedOneDayCount + m.missedBothDaysCount;
                                 return (
-                                  <tr key={m.id} className="border-b border-white/5 last:border-0">
-                                    <td className="px-3 py-2 text-gwcc-light text-xs">
+                                  <tr key={m.id} className="border-b border-border last:border-0">
+                                    <td className="px-3 py-2 text-foreground text-xs">
                                     <Link
                                       href={`/admin/members/${m.id}?from=semesters`}
                                       className="hover:text-gwcc-gold transition-colors"
@@ -260,7 +260,7 @@ export default function SemestersPage() {
                                     <td className="px-3 py-2 text-center text-red-400/80 text-xs">
                                       {m.missedBothDaysCount}
                                     </td>
-                                    <td className="px-3 py-2 text-center text-gwcc-light/60 text-xs font-medium">
+                                    <td className="px-3 py-2 text-center text-muted-foreground text-xs font-medium">
                                       {total}
                                     </td>
                                   </tr>
