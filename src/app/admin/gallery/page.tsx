@@ -33,7 +33,26 @@ export default function GalleryAdminPage() {
   const [albumName, setAlbumName] = useState("");
   const [albumDesc, setAlbumDesc] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  async function syncFromDrive() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/sync-gallery", { method: "POST" });
+      if (res.ok) {
+        const { added, removed, albums } = await res.json();
+        toast.success(`Synced: +${added} photos, -${removed} removed, ${albums} new albums`);
+        fetchAlbums();
+      } else {
+        const { error } = await res.json().catch(() => ({ error: "Sync failed" }));
+        toast.error(error);
+      }
+    } catch {
+      toast.error("Sync failed");
+    }
+    setSyncing(false);
+  }
 
   async function fetchAlbums() {
     const res = await fetch("/api/gallery/albums");
@@ -208,12 +227,22 @@ export default function GalleryAdminPage() {
           <h1 className="text-xl font-bold text-gwcc-light">Gallery</h1>
           <p className="text-gwcc-light/50 text-sm mt-0.5">{albums.length} albums</p>
         </div>
-        <Button
-          onClick={() => setShowAddAlbum(!showAddAlbum)}
-          className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90 font-semibold"
-        >
-          + New Album
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={syncFromDrive}
+            disabled={syncing}
+            variant="outline"
+            className="border-white/20 text-gwcc-light/70 hover:border-white/40 hover:text-gwcc-light"
+          >
+            {syncing ? "Syncing…" : "Sync from Drive"}
+          </Button>
+          <Button
+            onClick={() => setShowAddAlbum(!showAddAlbum)}
+            className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90 font-semibold"
+          >
+            + New Album
+          </Button>
+        </div>
       </div>
 
       {showAddAlbum && (

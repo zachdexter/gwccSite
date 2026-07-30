@@ -57,6 +57,7 @@ export const galleryAlbums = pgTable("gallery_albums", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description"),
+  driveFolderId: text("drive_folder_id"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -67,6 +68,17 @@ export const galleryPhotos = pgTable("gallery_photos", {
   filename: text("filename").notNull(),
   uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
   albumId: integer("album_id").references(() => galleryAlbums.id, { onDelete: "cascade" }),
+  driveFileId: text("drive_file_id").unique(),
+  showInHero: boolean("show_in_hero").notNull().default(false),
+  heroDisplayOrder: integer("hero_display_order").notNull().default(0),
+});
+
+export const heroPhotos = pgTable("hero_photos", {
+  id: serial("id").primaryKey(),
+  cloudinaryId: text("cloudinary_id").notNull(),
+  secureUrl: text("secure_url").notNull(),
+  displayOrder: integer("display_order").default(0).notNull(),
+  uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 });
 
 export const accounts = pgTable("accounts", {
@@ -82,3 +94,4 @@ export type AttendanceLog = typeof attendanceLogs.$inferSelect;
 export type CompMember = typeof compMembers.$inferSelect;
 export type GalleryAlbum = typeof galleryAlbums.$inferSelect;
 export type GalleryPhoto = typeof galleryPhotos.$inferSelect;
+export type HeroPhoto = typeof heroPhotos.$inferSelect;
