@@ -5,17 +5,12 @@ import { eq, isNotNull } from "drizzle-orm";
 import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
 
 function getDriveClient() {
-  const key = process.env.GOOGLE_SERVICE_ACCOUNT_KEY;
+  const apiKey = process.env.GOOGLE_API_KEY;
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-  if (!key || !folderId) {
-    throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY and GOOGLE_DRIVE_FOLDER_ID must be set");
+  if (!apiKey || !folderId) {
+    throw new Error("GOOGLE_API_KEY and GOOGLE_DRIVE_FOLDER_ID must be set");
   }
-  const credentials = JSON.parse(key);
-  const auth = new google.auth.GoogleAuth({
-    credentials,
-    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
-  });
-  return { drive: google.drive({ version: "v3", auth }), folderId };
+  return { drive: google.drive({ version: "v3", auth: apiKey }), folderId };
 }
 
 async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {

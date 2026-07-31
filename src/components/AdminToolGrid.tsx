@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, ImagePlay, Clock } from "lucide-react";
+import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, ImagePlay, Clock, Star } from "lucide-react";
 
 const tools = [
   {
@@ -33,6 +33,12 @@ const tools = [
     label: "Comp Team",
     description: "Manage comp team members",
     icon: Trophy,
+  },
+  {
+    href: "/admin/eboard",
+    label: "Eboard",
+    description: "Manage eboard roster",
+    icon: Star,
   },
   {
     href: "/admin/hero",

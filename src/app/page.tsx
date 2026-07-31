@@ -55,10 +55,10 @@ export default async function HomePage() {
 
           <div className="relative z-10 max-w-3xl space-y-4">
             <Image
-              src="/gwccgraffiticolor.PNG"
+              src="/gwccsplashlogo-white.png"
               alt="GWCC logo"
-              width={480}
-              height={345}
+              width={1024}
+              height={768}
               priority
               className="w-[22rem] md:w-[30rem] h-auto mx-auto"
             />

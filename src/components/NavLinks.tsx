@@ -14,11 +14,15 @@ export function NavLinks() {
 
   const isComp = pathname === "/comp";
   const isGallery = pathname.startsWith("/gallery");
+  const isEboard = pathname === "/eboard";
 
   return (
     <nav className="flex items-center gap-2">
       <Link href="/comp" className={`${chipBase} ${isComp ? chipActive : chipInactive}`}>
         Comp Team
+      </Link>
+      <Link href="/eboard" className={`${chipBase} ${isEboard ? chipActive : chipInactive}`}>
+        Eboard
       </Link>
       <Link href="/gallery" className={`${chipBase} ${isGallery ? chipActive : chipInactive}`}>
         Gallery
