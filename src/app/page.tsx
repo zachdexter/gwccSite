@@ -1,8 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { db } from "@/lib/db";
-import { galleryPhotos } from "@/lib/db/schema";
+import { galleryPhotos, practiceTimes } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
+import { sortPracticeTimes } from "@/lib/practiceTimes";
 import { siteConfig } from "@/config/site";
 import { PageTransition } from "@/components/PageTransition";
 import { HeroCarousel } from "@/components/HeroCarousel";
@@ -11,12 +12,27 @@ import { NavLinks } from "@/components/NavLinks";
 
 export const dynamic = "force-dynamic";
 
+function formatTime(value: string) {
+  const [hStr, mStr] = value.split(":");
+  const h = Number(hStr);
+  const period = h >= 12 ? "PM" : "AM";
+  const hour12 = h % 12 === 0 ? 12 : h % 12;
+  return `${hour12}:${mStr} ${period}`;
+}
+
 export default async function HomePage() {
   const photos = await db
     .select()
     .from(galleryPhotos)
     .where(eq(galleryPhotos.showInHero, true))
     .orderBy(asc(galleryPhotos.heroDisplayOrder), asc(galleryPhotos.uploadedAt));
+
+  const schedule = sortPracticeTimes(await db.select().from(practiceTimes));
+
+  const practiceScheduleItems = schedule.map((t) => ({
+    day: t.day,
+    time: `${formatTime(t.startTime)} – ${formatTime(t.endTime)}`,
+  }));
 
   return (
     <PageTransition>
@@ -69,14 +85,16 @@ export default async function HomePage() {
         </section>
 
         {/* Practice times */}
-        <section className="border-t border-border px-6 py-12">
-          <div className="max-w-2xl mx-auto">
-            <h2 className="font-heading text-gwcc-gold text-sm uppercase tracking-widest mb-6 text-center">
-              Practice Schedule
-            </h2>
-            <PracticeSchedule times={siteConfig.practiceTimes} />
-          </div>
-        </section>
+        {practiceScheduleItems.length > 0 && (
+          <section className="border-t border-border px-6 py-12">
+            <div className="max-w-2xl mx-auto">
+              <h2 className="font-heading text-gwcc-gold text-sm uppercase tracking-widest mb-6 text-center">
+                Practice Schedule
+              </h2>
+              <PracticeSchedule times={practiceScheduleItems} />
+            </div>
+          </section>
+        )}
 
         {/* Footer */}
         <footer className="border-t border-border px-6 py-5 flex items-center justify-between text-xs text-muted-foreground">

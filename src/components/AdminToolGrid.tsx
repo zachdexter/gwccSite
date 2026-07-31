@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, ImagePlay } from "lucide-react";
+import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, ImagePlay, Clock } from "lucide-react";
 
 const tools = [
   {
@@ -39,6 +39,12 @@ const tools = [
     label: "Home Photos",
     description: "Pick photos for the carousel",
     icon: ImagePlay,
+  },
+  {
+    href: "/admin/practice",
+    label: "Practice Times",
+    description: "Edit the practice schedule",
+    icon: Clock,
   },
 ];
 

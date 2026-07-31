@@ -81,6 +81,15 @@ export const heroPhotos = pgTable("hero_photos", {
   uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
 });
 
+export const practiceTimes = pgTable("practice_times", {
+  id: serial("id").primaryKey(),
+  day: text("day").notNull(),
+  startTime: text("start_time").notNull(),
+  endTime: text("end_time").notNull(),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
   role: text("role", { enum: ["president", "eboard"] }).notNull(),
@@ -95,3 +104,4 @@ export type CompMember = typeof compMembers.$inferSelect;
 export type GalleryAlbum = typeof galleryAlbums.$inferSelect;
 export type GalleryPhoto = typeof galleryPhotos.$inferSelect;
 export type HeroPhoto = typeof heroPhotos.$inferSelect;
+export type PracticeTime = typeof practiceTimes.$inferSelect;
