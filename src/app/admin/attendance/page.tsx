@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 
 type Member = {
   id: number;
@@ -17,12 +16,22 @@ type AttendanceLog = {
   loggedAt: string;
 };
 
+const COOLDOWN_MS = 2 * 60 * 60 * 1000;
+const UNDO_WINDOW_MS = 5 * 60 * 1000;
+
 export default function AttendancePage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
-  const [pendingUndo, setPendingUndo] = useState<Record<number, ReturnType<typeof setTimeout>>>({});
+  const [message, setMessage] = useState<string | null>(null);
+  const messageTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function showMessage(text: string) {
+    setMessage(text);
+    if (messageTimeout.current) clearTimeout(messageTimeout.current);
+    messageTimeout.current = setTimeout(() => setMessage(null), 4000);
+  }
 
   const fetchData = useCallback(async () => {
     const [membersRes, attendanceRes] = await Promise.all([
@@ -62,18 +71,20 @@ export default function AttendancePage() {
   }
 
   function getRecentLog(memberId: number) {
-    const fiveMinAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const cutoff = new Date(Date.now() - UNDO_WINDOW_MS);
     return logs
-      .filter((l) => l.memberId === memberId && new Date(l.loggedAt) > fiveMinAgo)
+      .filter((l) => l.memberId === memberId && new Date(l.loggedAt) > cutoff)
       .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime())[0];
   }
 
   function isOnCooldown(memberId: number) {
-    const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
-    return logs.some((l) => l.memberId === memberId && new Date(l.loggedAt) > thirtyMinAgo);
+    const cutoff = new Date(Date.now() - COOLDOWN_MS);
+    return logs.some((l) => l.memberId === memberId && new Date(l.loggedAt) > cutoff);
   }
 
   async function logAttendance(member: Member) {
+    if (isOnCooldown(member.id)) return;
+
     const optimisticLog: AttendanceLog = {
       id: Date.now(),
       memberId: member.id,
@@ -90,25 +101,18 @@ export default function AttendancePage() {
     if (!res.ok) {
       setLogs((prev) => prev.filter((l) => l.id !== optimisticLog.id));
       if (res.status === 409) {
-        toast.error(`${member.name} was already checked in recently`);
+        showMessage(`${member.name} was already checked in recently`);
       } else if (res.status === 400) {
         const data = await res.json().catch(() => null);
-        toast.error(data?.error === "No active semester" ? "No active semester — set one in Semesters" : "Failed to log attendance");
+        showMessage(data?.error === "No active semester" ? "No active semester — set one in Semesters" : "Failed to log attendance");
       } else {
-        toast.error("Failed to log attendance");
+        showMessage("Failed to log attendance");
       }
       return;
     }
 
     const realLog: AttendanceLog = await res.json();
     setLogs((prev) => [...prev.filter((l) => l.id !== optimisticLog.id), realLog]);
-
-    toast.success(`Logged for ${member.name}`, {
-      action: {
-        label: "Undo",
-        onClick: () => undoAttendance(member),
-      },
-    });
   }
 
   async function undoAttendance(member: Member) {
@@ -119,7 +123,7 @@ export default function AttendancePage() {
     });
 
     if (!res.ok) {
-      toast.error("Cannot undo — log is too old");
+      showMessage("Cannot undo — log is too old");
       return;
     }
 
@@ -127,8 +131,6 @@ export default function AttendancePage() {
     if (recentLog) {
       setLogs((prev) => prev.filter((l) => l.id !== recentLog.id));
     }
-
-    toast.success(`Undid log for ${member.name}`);
   }
 
   const filtered = members.filter((m) =>
@@ -154,6 +156,12 @@ export default function AttendancePage() {
         className="bg-card border-border text-foreground placeholder:text-muted-foreground/60 focus-visible:ring-gwcc-gold text-base h-12"
       />
 
+      {message && (
+        <div className="text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-md px-3 py-2">
+          {message}
+        </div>
+      )}
+
       <div className="space-y-2">
         {filtered.length === 0 && (
           <p className="text-muted-foreground text-center py-8">No members found.</p>
@@ -161,11 +169,19 @@ export default function AttendancePage() {
         {filtered.map((member) => {
           const count = getThisWeekCount(member.id);
           const cooldown = isOnCooldown(member.id);
+          const recentLog = getRecentLog(member.id);
           return (
-            <button
+            <div
               key={member.id}
+              role="button"
+              tabIndex={cooldown ? -1 : 0}
               onClick={() => logAttendance(member)}
-              className="w-full flex items-center justify-between bg-card border border-border rounded-lg px-4 py-4 hover:border-gwcc-gold/40 hover:bg-muted active:scale-[0.99] transition-all text-left"
+              onKeyDown={(e) => {
+                if (!cooldown && (e.key === "Enter" || e.key === " ")) logAttendance(member);
+              }}
+              className={`w-full flex items-center justify-between bg-card border border-border rounded-lg px-4 py-4 transition-all text-left ${
+                cooldown ? "" : "hover:border-gwcc-gold/40 hover:bg-muted active:scale-[0.99] cursor-pointer"
+              }`}
             >
               <div>
                 <span className="text-foreground font-medium">{member.name}</span>
@@ -173,9 +189,20 @@ export default function AttendancePage() {
                   <span className="ml-2 text-xs text-gwcc-gold/70">subsidized</span>
                 )}
               </div>
-              {cooldown ? (
-                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-400">
-                  recent
+              {recentLog ? (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    undoAttendance(member);
+                  }}
+                  className="text-xs font-medium px-2.5 py-1 rounded-full bg-orange-500/15 text-orange-400 hover:bg-orange-500/25 transition-colors"
+                >
+                  Undo
+                </button>
+              ) : cooldown ? (
+                <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-muted text-muted-foreground">
+                  checked in
                 </span>
               ) : (
                 <span
@@ -190,7 +217,7 @@ export default function AttendancePage() {
                   {count}×
                 </span>
               )}
-            </button>
+            </div>
           );
         })}
       </div>

@@ -14,6 +14,7 @@ export const members = pgTable("members", {
   email: text("email"),
   isSubsidized: boolean("is_subsidized").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
+  notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 

@@ -43,7 +43,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "No active semester" }, { status: 400 });
   }
 
-  const thirtyMinAgo = new Date(Date.now() - 30 * 60 * 1000);
+  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
   const recentCheck = await db
     .select()
     .from(attendanceLogs)
@@ -56,7 +56,7 @@ export async function POST(req: Request) {
     .orderBy(desc(attendanceLogs.loggedAt))
     .limit(1);
 
-  if (recentCheck[0] && recentCheck[0].loggedAt > thirtyMinAgo) {
+  if (recentCheck[0] && recentCheck[0].loggedAt > twoHoursAgo) {
     return NextResponse.json({ error: "cooldown" }, { status: 409 });
   }
 

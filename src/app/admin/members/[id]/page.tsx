@@ -16,6 +16,7 @@ type Member = {
   email: string | null;
   isSubsidized: boolean;
   isActive: boolean;
+  notes: string | null;
   createdAt: string;
 };
 
@@ -42,6 +43,8 @@ function MemberDetailPage() {
   const [loading, setLoading] = useState(true);
   const [addDate, setAddDate] = useState(new Date().toISOString().split("T")[0]);
   const [saving, setSaving] = useState(false);
+  const [notes, setNotes] = useState("");
+  const [savingNotes, setSavingNotes] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -54,6 +57,7 @@ function MemberDetailPage() {
         setMember(data.member);
         setSemesters(data.semesters);
         setLogs(data.logs);
+        setNotes(data.member.notes ?? "");
       }
       if (sessionRes.ok) {
         const s = await sessionRes.json();
@@ -63,6 +67,21 @@ function MemberDetailPage() {
     }
     load();
   }, [id]);
+
+  async function saveNotes() {
+    setSavingNotes(true);
+    const res = await fetch("/api/members", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: Number(id), notes }),
+    });
+    setSavingNotes(false);
+    if (res.ok) {
+      toast.success("Notes saved");
+    } else {
+      toast.error("Failed to save notes");
+    }
+  }
 
   async function addLog(e: React.FormEvent) {
     e.preventDefault();
@@ -176,6 +195,26 @@ function MemberDetailPage() {
           })}
         </p>
       </div>
+
+      {role != null && (
+        <div className="bg-card border border-border rounded-lg p-4 space-y-2">
+          <h2 className="text-card-foreground font-semibold text-sm">Notes</h2>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+            placeholder="Anything worth remembering about this member…"
+            className="w-full px-3 py-2 rounded-md bg-muted border border-border text-foreground text-sm resize-none"
+          />
+          <Button
+            onClick={saveNotes}
+            disabled={savingNotes}
+            className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90 font-semibold h-8 text-xs px-3"
+          >
+            {savingNotes ? "Saving…" : "Save Notes"}
+          </Button>
+        </div>
+      )}
 
       {activeSemester ? (
         <div className="bg-card border border-border rounded-lg p-4 space-y-3">
