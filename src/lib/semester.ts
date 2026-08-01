@@ -1,4 +1,4 @@
-import type { Semester } from "./db/schema";
+import type { Semester, SubsidyChange } from "./db/schema";
 
 export function getWeekBounds(date: Date): { weekStart: Date; weekEnd: Date } {
   const d = new Date(date);
@@ -34,6 +34,16 @@ export function getSemesterWeeks(
 
 export function isWeekClosed(weekEnd: Date): boolean {
   return weekEnd < new Date();
+}
+
+export function getEffectiveSubsidyStatus(
+  changes: Pick<SubsidyChange, "isSubsidized" | "changedAt">[],
+  asOf: Date
+): boolean {
+  const applicable = changes
+    .filter((c) => new Date(c.changedAt) <= asOf)
+    .sort((a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime());
+  return applicable[0]?.isSubsidized ?? false;
 }
 
 export function getAttendanceStatus(

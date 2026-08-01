@@ -91,6 +91,9 @@ export default function AttendancePage() {
       setLogs((prev) => prev.filter((l) => l.id !== optimisticLog.id));
       if (res.status === 409) {
         toast.error(`${member.name} was already checked in recently`);
+      } else if (res.status === 400) {
+        const data = await res.json().catch(() => null);
+        toast.error(data?.error === "No active semester" ? "No active semester — set one in Semesters" : "Failed to log attendance");
       } else {
         toast.error("Failed to log attendance");
       }

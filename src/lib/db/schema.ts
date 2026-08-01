@@ -17,6 +17,15 @@ export const members = pgTable("members", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const subsidyChanges = pgTable("subsidy_changes", {
+  id: serial("id").primaryKey(),
+  memberId: integer("member_id")
+    .notNull()
+    .references(() => members.id, { onDelete: "cascade" }),
+  isSubsidized: boolean("is_subsidized").notNull(),
+  changedAt: timestamp("changed_at").defaultNow().notNull(),
+});
+
 export const semesters = pgTable("semesters", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -101,6 +110,13 @@ export const eboardMembers = pgTable("eboard_members", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const alerts = pgTable("alerts", {
+  id: serial("id").primaryKey(),
+  message: text("message").notNull(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const accounts = pgTable("accounts", {
   id: serial("id").primaryKey(),
   role: text("role", { enum: ["president", "eboard"] }).notNull(),
@@ -117,3 +133,5 @@ export type GalleryPhoto = typeof galleryPhotos.$inferSelect;
 export type HeroPhoto = typeof heroPhotos.$inferSelect;
 export type PracticeTime = typeof practiceTimes.$inferSelect;
 export type EboardMember = typeof eboardMembers.$inferSelect;
+export type Alert = typeof alerts.$inferSelect;
+export type SubsidyChange = typeof subsidyChanges.$inferSelect;

@@ -9,6 +9,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { PracticeSchedule } from "@/components/PracticeSchedule";
 import { NavLinks } from "@/components/NavLinks";
+import { AlertBanner } from "@/components/AlertBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,8 @@ export default async function HomePage() {
         {/* Hero with carousel background */}
         <section className="relative flex flex-col items-center justify-center px-6 text-center min-h-[82vh]">
           <HeroCarousel photos={photos} />
+
+          <AlertBanner />
 
           <div className="relative z-10 max-w-3xl space-y-4">
             <Image

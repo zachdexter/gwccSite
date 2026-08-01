@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { members } from "@/lib/db/schema";
+import { members, subsidyChanges } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -24,6 +24,12 @@ export async function POST(req: Request) {
     .values({ name, email: email || null, isSubsidized: Boolean(isSubsidized) })
     .returning();
 
+  await db.insert(subsidyChanges).values({
+    memberId: member.id,
+    isSubsidized: member.isSubsidized,
+    changedAt: member.createdAt,
+  });
+
   return NextResponse.json(member, { status: 201 });
 }
 
@@ -39,6 +45,13 @@ export async function PATCH(req: Request) {
     .set(updates)
     .where(eq(members.id, id))
     .returning();
+
+  if ("isSubsidized" in updates) {
+    await db.insert(subsidyChanges).values({
+      memberId: id,
+      isSubsidized: updated.isSubsidized,
+    });
+  }
 
   return NextResponse.json(updated);
 }

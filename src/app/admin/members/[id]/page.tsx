@@ -289,7 +289,7 @@ function MemberDetailPage() {
           <span className="text-muted-foreground text-xs">{logs.length} total</span>
         </div>
 
-        {role === "president" && (
+        {role != null && (
           <form
             onSubmit={addLog}
             className="flex items-center gap-2 px-4 py-3 border-b border-border bg-muted"
@@ -338,7 +338,7 @@ function MemberDetailPage() {
                   </span>
                   <span className="text-muted-foreground text-xs">{log.loggedBy}</span>
                 </div>
-                {role === "president" && (
+                {role != null && (
                   <button
                     onClick={() => removeLog(log)}
                     className="text-muted-foreground hover:text-red-400 transition-colors text-lg leading-none"

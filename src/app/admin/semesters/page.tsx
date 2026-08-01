@@ -36,13 +36,19 @@ export default function SemestersPage() {
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [role, setRole] = useState<string | null>(null);
 
   async function fetchSemesters() {
     const res = await fetch("/api/semesters");
     if (res.ok) setSemesters(await res.json());
   }
 
-  useEffect(() => { fetchSemesters(); }, []);
+  async function fetchRole() {
+    const res = await fetch("/api/session");
+    if (res.ok) setRole((await res.json()).role);
+  }
+
+  useEffect(() => { fetchSemesters(); fetchRole(); }, []);
 
   async function addSemester(e: React.FormEvent) {
     e.preventDefault();
@@ -73,6 +79,18 @@ export default function SemestersPage() {
     }
   }
 
+  async function deactivate(id: number) {
+    const res = await fetch("/api/semesters", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, isActive: false }),
+    });
+    if (res.ok) {
+      setSemesters((prev) => prev.map((s) => (s.id === id ? { ...s, isActive: false } : s)));
+      toast.success("Semester deactivated");
+    }
+  }
+
   async function toggleExpand(id: number) {
     if (expandedId === id) { setExpandedId(null); return; }
     setExpandedId(id);
@@ -88,7 +106,12 @@ export default function SemestersPage() {
   }
 
   async function deleteSemester(id: number, semName: string) {
-    if (!confirm(`Delete ${semName}? This will permanently remove all attendance data for this semester.`)) return;
+    if (
+      !confirm(
+        `Delete ${semName}? This is irreversible — it will permanently remove all attendance data for this semester. dude only do this if u made this semester by mistake`
+      )
+    )
+      return;
     const res = await fetch("/api/semesters", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -197,6 +220,12 @@ export default function SemestersPage() {
                     </div>
                   </button>
                   <div className="flex items-center gap-2">
+                    <Link
+                      href={`/admin/semesters/${semester.id}/attendance`}
+                      className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors"
+                    >
+                      Grid
+                    </Link>
                     {!semester.isActive && (
                       <button
                         onClick={() => activate(semester.id)}
@@ -205,7 +234,15 @@ export default function SemestersPage() {
                         Activate
                       </button>
                     )}
-                    {!semester.isActive && (
+                    {semester.isActive && (
+                      <button
+                        onClick={() => deactivate(semester.id)}
+                        className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        Deactivate
+                      </button>
+                    )}
+                    {!semester.isActive && role === "president" && (
                       <button
                         onClick={() => deleteSemester(semester.id, semester.name)}
                         className="text-xs text-muted-foreground hover:text-red-400 transition-colors"

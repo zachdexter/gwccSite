@@ -54,6 +54,8 @@ export async function PATCH(req: Request) {
 export async function DELETE(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "president")
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await req.json();
   await db.delete(semesters).where(eq(semesters.id, id));

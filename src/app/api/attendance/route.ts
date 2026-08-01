@@ -107,5 +107,6 @@ export async function DELETE(req: Request) {
   }
 
   await db.delete(attendanceLogs).where(eq(attendanceLogs.id, recent[0].id));
+
   return NextResponse.json({ ok: true });
 }

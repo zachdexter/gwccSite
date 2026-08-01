@@ -3,6 +3,10 @@
     {
       "path": "/api/sync-gallery",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/alerts/cleanup",
+      "schedule": "0 6 * * *"
     }
   ]
 }

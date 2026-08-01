@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, ImagePlay, Clock, Star } from "lucide-react";
+import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, ImagePlay, Clock, Star, Megaphone } from "lucide-react";
 
 const tools = [
   {
@@ -51,6 +51,12 @@ const tools = [
     label: "Practice Times",
     description: "Edit the practice schedule",
     icon: Clock,
+  },
+  {
+    href: "/admin/alerts",
+    label: "Alerts",
+    description: "Post homepage announcements",
+    icon: Megaphone,
   },
 ];
 

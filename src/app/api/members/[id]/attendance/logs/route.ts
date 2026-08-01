@@ -10,8 +10,6 @@ export async function POST(
 ) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role !== "president")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
   const memberId = parseInt(id);
@@ -40,8 +38,6 @@ export async function DELETE(
 ) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  if (session.user.role !== "president")
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await params;
   const memberId = parseInt(id);
