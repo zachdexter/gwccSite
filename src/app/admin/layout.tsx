@@ -13,7 +13,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header className="bg-gwcc-navy border-b border-white/10 px-4 py-3 flex items-center justify-between">
+      <header className="sticky top-0 z-20 bg-gwcc-navy border-b border-white/10 px-4 py-3 flex items-center justify-between">
         <form
           action={async () => {
             "use server";
