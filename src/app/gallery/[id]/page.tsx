@@ -29,8 +29,8 @@ export default async function AlbumPage({
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="px-6 py-5 flex items-center justify-between border-b border-border">
-          <Link href="/" className="text-gwcc-gold font-bold tracking-widest text-sm uppercase">
+        <header className="px-3.5 py-3 flex items-center justify-between border-b border-border">
+          <Link href="/" className="text-gwcc-gold font-bold tracking-widest text-[8px] uppercase">
             GWCC
           </Link>
           <NavLinks />

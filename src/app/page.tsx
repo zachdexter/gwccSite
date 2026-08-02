@@ -39,11 +39,11 @@ export default async function HomePage() {
     <PageTransition>
       <div className="min-h-screen bg-background flex flex-col">
         {/* Nav */}
-        <header className="px-6 py-5 flex items-center justify-between border-b border-border">
+        <header className="px-3.5 py-3 flex items-center justify-between border-b border-border">
           <Link
             href="/"
             aria-label="GWCC home"
-            className="flex items-center justify-center w-9 h-9 rounded-md border border-dashed border-gwcc-gold/40 text-gwcc-gold/60 text-[10px] uppercase tracking-tight hover:border-gwcc-gold/70 hover:text-gwcc-gold transition-colors"
+            className="flex items-center justify-center w-[22px] h-[22px] rounded-sm border border-dashed border-gwcc-gold/40 text-gwcc-gold/60 text-[6px] uppercase tracking-tight hover:border-gwcc-gold/70 hover:text-gwcc-gold transition-colors"
           >
             logo
           </Link>
@@ -67,22 +67,6 @@ export default async function HomePage() {
             />
             <div className="text-muted-foreground text-[11px] uppercase tracking-[0.25em]">
               George Washington University Climbing Club
-            </div>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-              <a
-                href={siteConfig.socials.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-6 py-3 bg-gwcc-gold text-gwcc-dark font-semibold rounded-md hover:bg-gwcc-gold/90 transition-colors"
-              >
-                Follow on Instagram
-              </a>
-              <Link
-                href="/comp"
-                className="px-6 py-3 border border-border text-foreground/80 rounded-md hover:border-foreground/40 hover:text-foreground transition-colors"
-              >
-                Meet the Comp Team
-              </Link>
             </div>
           </div>
         </section>

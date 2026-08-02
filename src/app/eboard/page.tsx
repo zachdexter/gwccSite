@@ -18,8 +18,8 @@ export default async function EboardPage() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="px-6 py-5 flex items-center justify-between border-b border-border">
-          <Link href="/" className="text-gwcc-gold font-bold tracking-widest text-sm uppercase">
+        <header className="px-3.5 py-3 flex items-center justify-between border-b border-border">
+          <Link href="/" className="text-gwcc-gold font-bold tracking-widest text-[8px] uppercase">
             GWCC
           </Link>
           <NavLinks />
@@ -30,10 +30,7 @@ export default async function EboardPage() {
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
               Leadership
             </div>
-            <h1 className="font-heading text-5xl md:text-6xl leading-tight text-foreground">Meet the Eboard</h1>
-            <p className="text-muted-foreground mt-4 max-w-lg">
-              The students who run GWCC day to day.
-            </p>
+            <h1 className="font-heading text-5xl md:text-6xl leading-tight text-foreground">Meet the Leadership Team</h1>
           </div>
 
           {members.length === 0 ? (
