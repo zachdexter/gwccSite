@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
-import { siteConfig } from "@/config/site";
 import {
   Sheet,
   SheetTrigger,
@@ -28,6 +27,7 @@ export function NavLinks() {
   const isComp = pathname === "/comp";
   const isGallery = pathname.startsWith("/gallery");
   const isEboard = pathname === "/eboard";
+  const isContact = pathname === "/contact";
 
   return (
     <>
@@ -41,14 +41,9 @@ export function NavLinks() {
         <Link href="/gallery" className={`${chipBase} ${isGallery ? chipActive : chipInactive}`}>
           Gallery
         </Link>
-        <a
-          href={siteConfig.socials.instagram}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={`${chipBase} ${chipInactive}`}
-        >
-          Instagram
-        </a>
+        <Link href="/contact" className={`${chipBase} ${isContact ? chipActive : chipInactive}`}>
+          Contact Us
+        </Link>
       </nav>
 
       <div className="md:hidden">
@@ -96,15 +91,13 @@ export function NavLinks() {
               </SheetClose>
               <SheetClose
                 render={
-                  <a
-                    href={siteConfig.socials.instagram}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={`${drawerLinkBase} ${drawerLinkInactive}`}
+                  <Link
+                    href="/contact"
+                    className={`${drawerLinkBase} ${isContact ? drawerLinkActive : drawerLinkInactive}`}
                   />
                 }
               >
-                Instagram
+                Contact Us
               </SheetClose>
             </nav>
           </SheetContent>

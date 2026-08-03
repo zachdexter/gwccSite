@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { db } from "@/lib/db";
 import { galleryPhotos, practiceTimes } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
@@ -7,6 +6,8 @@ import { sortPracticeTimes } from "@/lib/practiceTimes";
 import { siteConfig } from "@/config/site";
 import { PageTransition } from "@/components/PageTransition";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { HeroContent } from "@/components/HeroContent";
+import { ScrollIndicator } from "@/components/ScrollIndicator";
 import { PracticeSchedule } from "@/components/PracticeSchedule";
 import { NavLinks } from "@/components/NavLinks";
 import { AlertBanner } from "@/components/AlertBanner";
@@ -37,58 +38,55 @@ export default async function HomePage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background flex flex-col">
-        {/* Nav */}
-        <header className="px-3.5 py-3 flex items-center justify-between border-b border-border">
-          <Link
-            href="/"
-            aria-label="GWCC home"
-            className="flex items-center justify-center w-[22px] h-[22px] rounded-sm border border-dashed border-gwcc-gold/40 text-gwcc-gold/60 text-[6px] uppercase tracking-tight hover:border-gwcc-gold/70 hover:text-gwcc-gold transition-colors"
-          >
-            logo
-          </Link>
-          <NavLinks />
-        </header>
+      <div className="min-h-screen flex flex-col">
+        <HeroCarousel photos={photos} />
 
-        {/* Hero with carousel background */}
-        <section className="relative flex flex-col items-center justify-center px-6 text-center min-h-[82vh]">
-          <HeroCarousel photos={photos} />
+        <div className="h-screen flex flex-col">
+          {/* Nav */}
+          <header className="relative z-20 bg-background px-3.5 py-3 flex items-center justify-between border-b border-border">
+            <Link
+              href="/"
+              aria-label="GWCC home"
+              className="flex items-center justify-center w-[22px] h-[22px] rounded-sm border border-dashed border-gwcc-gold/40 text-gwcc-gold/60 text-[6px] uppercase tracking-tight hover:border-gwcc-gold/70 hover:text-gwcc-gold transition-colors"
+            >
+              logo
+            </Link>
+            <NavLinks />
+          </header>
 
-          <AlertBanner />
-
-          <div className="relative z-10 max-w-3xl space-y-4">
-            <Image
-              src="/gwccsplashlogo-white.png"
-              alt="GWCC logo"
-              width={1024}
-              height={768}
-              priority
-              className="w-[22rem] md:w-[30rem] h-auto mx-auto"
-            />
-            <div className="text-muted-foreground text-[11px] uppercase tracking-[0.25em]">
-              George Washington University Climbing Club
-            </div>
-          </div>
-        </section>
+          {/* Hero content, scrolls/fades over the fixed carousel */}
+          <section className="relative flex-1 flex flex-col items-center justify-center px-6 text-center">
+            <AlertBanner />
+            <HeroContent />
+            <ScrollIndicator />
+          </section>
+        </div>
 
         {/* Practice times */}
         {practiceScheduleItems.length > 0 && (
-          <section className="border-t border-border px-6 py-12">
+          <section id="practice-times" className="relative px-6 py-12 scroll-mt-16">
             <div className="max-w-2xl mx-auto">
-              <h2 className="font-heading text-gwcc-gold text-sm uppercase tracking-widest mb-6 text-center">
-                Practice Schedule
-              </h2>
               <PracticeSchedule times={practiceScheduleItems} />
             </div>
           </section>
         )}
 
         {/* Footer */}
-        <footer className="border-t border-border px-6 py-5 flex items-center justify-between text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} {siteConfig.name}</span>
-          <Link href="/login" className="hover:text-foreground transition-colors">
-            Eboard Login
-          </Link>
+        <footer className="relative bg-background/90 backdrop-blur-sm border-t border-border px-6 py-2.5 flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            © {new Date().getFullYear()} {siteConfig.shortName} ·{" "}
+            <Link href="/login" className="hover:text-foreground transition-colors">
+              Login
+            </Link>
+          </span>
+          <a
+            href={siteConfig.socials.linktree}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-foreground transition-colors"
+          >
+            Linktree
+          </a>
         </footer>
       </div>
     </PageTransition>

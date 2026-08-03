@@ -39,11 +39,6 @@ export default async function EboardPage() {
             <EboardGrid members={members} />
           )}
         </main>
-
-        <footer className="border-t border-border px-6 py-5 flex items-center justify-between text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-foreground transition-colors">← Home</Link>
-          <Link href="/login" className="hover:text-foreground transition-colors">Eboard Login</Link>
-        </footer>
       </div>
     </PageTransition>
   );

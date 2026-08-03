@@ -24,26 +24,24 @@ export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
   const current = photos[index];
 
   return (
-    <>
-      <div className="absolute inset-0 overflow-hidden">
-        <AnimatePresence>
-          <motion.img
-            key={current.id}
-            src={current.secureUrl}
-            alt=""
-            className="absolute inset-0 w-full h-full object-cover"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 1.5, ease: "easeInOut" }}
-          />
-        </AnimatePresence>
-        {/* photo-relative scrim, intentionally not theme-aware */}
-        <div className="absolute inset-0 bg-gradient-to-b from-gwcc-dark/65 via-gwcc-dark/55 to-gwcc-dark/85" />
-      </div>
+    <div className="fixed inset-0 -z-10 overflow-hidden">
+      <AnimatePresence>
+        <motion.img
+          key={current.id}
+          src={current.secureUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.5, ease: "easeInOut" }}
+        />
+      </AnimatePresence>
+      {/* photo-relative scrim, intentionally not theme-aware */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gwcc-dark/65 via-gwcc-dark/55 to-gwcc-dark/85" />
 
       {photos.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 flex gap-2 z-10">
           {photos.map((_, i) => (
             <button
               key={i}
@@ -55,6 +53,6 @@ export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
           ))}
         </div>
       )}
-    </>
+    </div>
   );
 }
