@@ -1,18 +1,13 @@
 import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { PageTransition } from "@/components/PageTransition";
-import { NavLinks } from "@/components/NavLinks";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export default function ContactPage() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="px-3.5 py-3 flex items-center justify-between border-b border-border">
-          <Link href="/" className="text-gwcc-gold font-bold tracking-widest text-[8px] uppercase">
-            GWCC
-          </Link>
-          <NavLinks />
-        </header>
+        <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-3xl mx-auto w-full">
           <section className="mb-20 text-center">

@@ -39,6 +39,24 @@ export function PhotoGrid({ photos }: { photos: Photo[] }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [openIndex, close, showPrev, showNext]);
 
+  const touchStartX = useRef<number | null>(null);
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+
+  const onTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (touchStartX.current === null) return;
+      const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+      const SWIPE_THRESHOLD = 50;
+      if (deltaX > SWIPE_THRESHOLD) showPrev();
+      else if (deltaX < -SWIPE_THRESHOLD) showNext();
+      touchStartX.current = null;
+    },
+    [showPrev, showNext]
+  );
+
   const current = openIndex === null ? null : photos[openIndex];
   const [hero, ...rest] = photos;
   const restIds = rest.map((p) => p.id).join(",");
@@ -145,6 +163,8 @@ export function PhotoGrid({ photos }: { photos: Photo[] }) {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={close}
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
           >
             <button
               onClick={close}
@@ -153,6 +173,12 @@ export function PhotoGrid({ photos }: { photos: Photo[] }) {
             >
               ×
             </button>
+
+            {photos.length > 1 && openIndex !== null && (
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 sm:top-6 text-white/70 text-sm z-10">
+                {openIndex + 1} / {photos.length}
+              </div>
+            )}
 
             {photos.length > 1 && (
               <button

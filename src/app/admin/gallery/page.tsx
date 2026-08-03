@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useConfirm } from "@/components/useConfirm";
 import { toast } from "sonner";
 
 type Album = {
@@ -28,6 +29,7 @@ type Photo = {
 export default function GalleryAdminPage() {
   const [view, setView] = useState<"albums" | "photos">("albums");
   const [albums, setAlbums] = useState<Album[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedAlbum, setSelectedAlbum] = useState<Album | null>(null);
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [showAddAlbum, setShowAddAlbum] = useState(false);
@@ -36,6 +38,7 @@ export default function GalleryAdminPage() {
   const [uploading, setUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   async function syncFromDrive() {
     setSyncing(true);
@@ -58,6 +61,7 @@ export default function GalleryAdminPage() {
   async function fetchAlbums() {
     const res = await fetch("/api/gallery/albums");
     if (res.ok) setAlbums(await res.json());
+    setLoading(false);
   }
 
   useEffect(() => { fetchAlbums(); }, []);
@@ -98,7 +102,7 @@ export default function GalleryAdminPage() {
   }
 
   async function deleteAlbum(album: Album) {
-    if (!confirm(`Delete "${album.name}" and all ${album.photoCount} photo(s)?`)) return;
+    if (!(await confirm(`Delete "${album.name}" and all ${album.photoCount} photo(s)?`))) return;
     const res = await fetch("/api/gallery/albums", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -159,7 +163,7 @@ export default function GalleryAdminPage() {
   }
 
   async function deletePhoto(photo: Photo) {
-    if (!confirm(`Delete ${photo.filename}?`)) return;
+    if (!(await confirm(`Delete ${photo.filename}?`))) return;
     const res = await fetch("/api/gallery", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -175,6 +179,7 @@ export default function GalleryAdminPage() {
   if (view === "photos" && selectedAlbum) {
     return (
       <div className="max-w-4xl mx-auto space-y-6">
+        {ConfirmDialog}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -256,6 +261,7 @@ export default function GalleryAdminPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
+      {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Gallery</h1>
@@ -322,7 +328,9 @@ export default function GalleryAdminPage() {
         </form>
       )}
 
-      {albums.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-20 text-muted-foreground">Loading…</div>
+      ) : albums.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           No albums yet. Create one to start uploading photos.
         </div>

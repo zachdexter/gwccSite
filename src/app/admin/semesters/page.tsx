@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/useConfirm";
+import { useAdminRole } from "@/components/AdminRoleContext";
 import { toast } from "sonner";
 
 type Semester = {
@@ -36,19 +38,15 @@ export default function SemestersPage() {
   const [name, setName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [role, setRole] = useState<string | null>(null);
+  const role = useAdminRole();
+  const { confirm, ConfirmDialog } = useConfirm();
 
   async function fetchSemesters() {
     const res = await fetch("/api/semesters");
     if (res.ok) setSemesters(await res.json());
   }
 
-  async function fetchRole() {
-    const res = await fetch("/api/session");
-    if (res.ok) setRole((await res.json()).role);
-  }
-
-  useEffect(() => { fetchSemesters(); fetchRole(); }, []);
+  useEffect(() => { fetchSemesters(); }, []);
 
   async function addSemester(e: React.FormEvent) {
     e.preventDefault();
@@ -107,9 +105,9 @@ export default function SemestersPage() {
 
   async function deleteSemester(id: number, semName: string) {
     if (
-      !confirm(
+      !(await confirm(
         `Delete ${semName}? This is irreversible — it will permanently remove all attendance data for this semester. dude only do this if u made this semester by mistake`
-      )
+      ))
     )
       return;
     const res = await fetch("/api/semesters", {
@@ -125,6 +123,7 @@ export default function SemestersPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Semesters</h1>
@@ -243,12 +242,13 @@ export default function SemestersPage() {
                       </button>
                     )}
                     {!semester.isActive && role === "president" && (
-                      <button
+                      <Button
+                        variant="destructive"
+                        size="xs"
                         onClick={() => deleteSemester(semester.id, semester.name)}
-                        className="text-xs text-muted-foreground hover:text-red-400 transition-colors"
                       >
                         Delete
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>

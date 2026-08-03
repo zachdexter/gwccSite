@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { db } from "@/lib/db";
 import { compMembers } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { PageTransition } from "@/components/PageTransition";
 import { CompTeamGrid } from "@/components/CompTeamGrid";
-import { NavLinks } from "@/components/NavLinks";
+import { SiteHeader } from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -18,12 +17,7 @@ export default async function CompPage() {
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="px-3.5 py-3 flex items-center justify-between border-b border-border">
-          <Link href="/" className="text-gwcc-gold font-bold tracking-widest text-[8px] uppercase">
-            GWCC
-          </Link>
-          <NavLinks />
-        </header>
+        <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-5xl mx-auto w-full">
           <div className="mb-12">

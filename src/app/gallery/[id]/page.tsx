@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { galleryAlbums, galleryPhotos } from "@/lib/db/schema";
 import { eq, asc } from "drizzle-orm";
 import { PageTransition } from "@/components/PageTransition";
-import { NavLinks } from "@/components/NavLinks";
+import { SiteHeader } from "@/components/SiteHeader";
 import { PhotoGrid } from "@/components/PhotoGrid";
 
 export const dynamic = "force-dynamic";
@@ -36,12 +36,7 @@ export default async function AlbumPage({
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex flex-col">
-        <header className="px-3.5 py-3 flex items-center justify-between border-b border-border">
-          <Link href="/" className="text-gwcc-gold font-bold tracking-widest text-[8px] uppercase">
-            GWCC
-          </Link>
-          <NavLinks />
-        </header>
+        <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-6xl mx-auto w-full">
           <div className="mb-4">

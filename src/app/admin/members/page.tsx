@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import Fuse from "fuse.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { useConfirm } from "@/components/useConfirm";
 import { toast } from "sonner";
 
 type Member = {
@@ -30,6 +32,7 @@ export default function MembersPage() {
   const [email, setEmail] = useState("");
   const [isSubsidized, setIsSubsidized] = useState(false);
   const [query, setQuery] = useState("");
+  const { confirm, ConfirmDialog } = useConfirm();
 
   async function fetchMembers() {
     const res = await fetch("/api/members");
@@ -84,7 +87,7 @@ export default function MembersPage() {
   }
 
   async function deactivate(member: Member) {
-    if (!confirm(`Remove ${member.name} from the active roster?`)) return;
+    if (!(await confirm(`Remove ${member.name} from the active roster?`))) return;
     const res = await fetch("/api/members", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -96,13 +99,20 @@ export default function MembersPage() {
     }
   }
 
-  const active = members.filter(
-    (m) => m.isActive && m.name.toLowerCase().includes(query.toLowerCase())
+  const activeMembers = useMemo(() => members.filter((m) => m.isActive), [members]);
+  const searchFuse = useMemo(
+    () => new Fuse(activeMembers, { keys: ["name"], threshold: 0.4 }),
+    [activeMembers]
   );
+  const trimmedQuery = query.trim();
+  const active = trimmedQuery
+    ? searchFuse.search(trimmedQuery).map((r) => r.item)
+    : activeMembers;
   const subsidizedCount = members.filter((m) => m.isActive && m.isSubsidized).length;
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Members</h1>
@@ -210,12 +220,14 @@ export default function MembersPage() {
                   >
                     {member.isSubsidized ? "Remove subsidy" : "Add subsidy"}
                   </button>
-                  <button
+                  <Button
+                    variant="destructive"
+                    size="xs"
                     onClick={() => deactivate(member)}
-                    className="text-xs text-muted-foreground hover:text-red-400 transition-colors ml-2"
+                    className="ml-2"
                   >
                     Remove
-                  </button>
+                  </Button>
                 </div>
               </div>
             );

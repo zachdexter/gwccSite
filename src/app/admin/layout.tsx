@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { signOut } from "@/auth";
 import NavMenuButton from "./NavMenuButton";
+import { AdminRoleProvider } from "@/components/AdminRoleContext";
 
 export default async function AdminLayout({
   children,
@@ -12,25 +13,27 @@ export default async function AdminLayout({
   if (!session) redirect("/login");
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="sticky top-0 z-20 bg-gwcc-navy border-b border-white/10 px-4 py-3 flex items-center justify-between">
-        <form
-          action={async () => {
-            "use server";
-            await signOut({ redirectTo: "/" });
-          }}
-        >
-          <button
-            type="submit"
-            className="text-gwcc-gold font-bold tracking-wide text-sm hover:opacity-70 transition-opacity"
+    <AdminRoleProvider role={session.user.role}>
+      <div className="min-h-screen flex flex-col bg-background">
+        <header className="sticky top-0 z-20 bg-gwcc-navy border-b border-white/10 px-4 py-3 flex items-center justify-between">
+          <form
+            action={async () => {
+              "use server";
+              await signOut({ redirectTo: "/" });
+            }}
           >
-            GWCC
-          </button>
-        </form>
-        <NavMenuButton role={session.user.role} />
-      </header>
+            <button
+              type="submit"
+              className="text-gwcc-gold font-bold tracking-wide text-sm hover:opacity-70 transition-opacity"
+            >
+              GWCC
+            </button>
+          </form>
+          <NavMenuButton />
+        </header>
 
-      <main className="flex-1 p-4 md:p-6">{children}</main>
-    </div>
+        <main className="flex-1 p-4 md:p-6">{children}</main>
+      </div>
+    </AdminRoleProvider>
   );
 }

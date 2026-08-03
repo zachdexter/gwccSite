@@ -27,6 +27,7 @@ export function NavLinks() {
   const isComp = pathname === "/comp";
   const isGallery = pathname.startsWith("/gallery");
   const isEboard = pathname === "/eboard";
+  const isMembership = pathname === "/membership";
   const isContact = pathname === "/contact";
 
   return (
@@ -41,8 +42,14 @@ export function NavLinks() {
         <Link href="/gallery" className={`${chipBase} ${isGallery ? chipActive : chipInactive}`}>
           Gallery
         </Link>
+        <Link
+          href="/membership"
+          className={`${chipBase} ${isMembership ? chipActive : chipInactive}`}
+        >
+          Membership
+        </Link>
         <Link href="/contact" className={`${chipBase} ${isContact ? chipActive : chipInactive}`}>
-          Contact Us
+          Get Involved
         </Link>
       </nav>
 
@@ -92,12 +99,22 @@ export function NavLinks() {
               <SheetClose
                 render={
                   <Link
+                    href="/membership"
+                    className={`${drawerLinkBase} ${isMembership ? drawerLinkActive : drawerLinkInactive}`}
+                  />
+                }
+              >
+                Membership
+              </SheetClose>
+              <SheetClose
+                render={
+                  <Link
                     href="/contact"
                     className={`${drawerLinkBase} ${isContact ? drawerLinkActive : drawerLinkInactive}`}
                   />
                 }
               >
-                Contact Us
+                Get Involved
               </SheetClose>
             </nav>
           </SheetContent>

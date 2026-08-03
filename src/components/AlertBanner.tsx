@@ -9,17 +9,38 @@ type Alert = {
   expiresAt: string;
 };
 
+const DISMISSED_KEY = "gwcc-dismissed-alerts";
+
+function getDismissedIds(): number[] {
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    return raw ? (JSON.parse(raw) as number[]) : [];
+  } catch {
+    return [];
+  }
+}
+
 export function AlertBanner() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
 
   useEffect(() => {
     fetch("/api/alerts")
       .then((res) => (res.ok ? res.json() : []))
-      .then((data: Alert[]) => setAlerts(data));
+      .then((data: Alert[]) => {
+        const dismissed = getDismissedIds();
+        setAlerts(data.filter((a) => !dismissed.includes(a.id)));
+      })
+      .catch(() => {});
   }, []);
 
   function dismiss(id: number) {
     setAlerts((prev) => prev.filter((a) => a.id !== id));
+    try {
+      const dismissed = getDismissedIds();
+      if (!dismissed.includes(id)) {
+        localStorage.setItem(DISMISSED_KEY, JSON.stringify([...dismissed, id]));
+      }
+    } catch {}
   }
 
   if (alerts.length === 0) return null;

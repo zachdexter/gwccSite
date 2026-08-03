@@ -3,10 +3,10 @@
 import { useState } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import AdminToolGrid from "@/components/AdminToolGrid";
 
-export default function NavMenuButton({ role }: { role?: string }) {
+export default function NavMenuButton() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -21,14 +21,16 @@ export default function NavMenuButton({ role }: { role?: string }) {
         Menu
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-popover border-border sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-popover-foreground">Navigation</DialogTitle>
-          </DialogHeader>
-          <AdminToolGrid role={role} onNavigate={() => setOpen(false)} />
-        </DialogContent>
-      </Dialog>
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="right" className="bg-popover border-border">
+          <SheetHeader>
+            <SheetTitle>Navigation</SheetTitle>
+          </SheetHeader>
+          <div className="px-4 pb-4">
+            <AdminToolGrid onNavigate={() => setOpen(false)} />
+          </div>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

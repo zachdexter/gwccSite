@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useConfirm } from "@/components/useConfirm";
 import { toast } from "sonner";
 
 type EboardMember = {
@@ -20,6 +21,7 @@ const YEARS = ["Fr", "So", "Jr", "Sr", "Alumni"];
 
 export default function EboardAdminPage() {
   const [members, setMembers] = useState<EboardMember[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<EboardMember | null>(null);
   const [form, setForm] = useState({
@@ -28,10 +30,12 @@ export default function EboardAdminPage() {
   const [headshotFile, setHeadshotFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   async function fetchMembers() {
     const res = await fetch("/api/eboard");
     if (res.ok) setMembers(await res.json());
+    setLoading(false);
   }
 
   useEffect(() => { fetchMembers(); }, []);
@@ -96,7 +100,7 @@ export default function EboardAdminPage() {
   }
 
   async function deactivate(id: number, name: string) {
-    if (!confirm(`Remove ${name} from the eboard page?`)) return;
+    if (!(await confirm(`Remove ${name} from the eboard page?`))) return;
     const res = await fetch("/api/eboard", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -116,6 +120,7 @@ export default function EboardAdminPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
+      {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Eboard</h1>
@@ -197,27 +202,33 @@ export default function EboardAdminPage() {
       )}
 
       <div className="space-y-3">
-        {members.map((m) => (
-          <div key={m.id} className="flex items-center gap-4 bg-card border border-border rounded-lg px-4 py-3">
-            {m.headshotUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={m.headshotUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-muted border border-border flex-shrink-0" />
-            )}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-card-foreground font-medium">{m.name}</span>
-                <span className="text-muted-foreground text-xs">{m.year}</span>
+        {loading ? (
+          <div className="text-center py-12 text-muted-foreground">Loading…</div>
+        ) : members.length === 0 ? (
+          <div className="text-center py-12 text-muted-foreground">No eboard members yet.</div>
+        ) : (
+          members.map((m) => (
+            <div key={m.id} className="flex items-center gap-4 bg-card border border-border rounded-lg px-4 py-3">
+              {m.headshotUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={m.headshotUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-muted border border-border flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-card-foreground font-medium">{m.name}</span>
+                  <span className="text-muted-foreground text-xs">{m.year}</span>
+                </div>
+                <p className="text-gwcc-gold text-xs mt-0.5">{m.role}</p>
               </div>
-              <p className="text-gwcc-gold text-xs mt-0.5">{m.role}</p>
+              <div className="flex gap-2 flex-shrink-0">
+                <button onClick={() => startEdit(m)} className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors">Edit</button>
+                <Button variant="destructive" size="xs" onClick={() => deactivate(m.id, m.name)}>Remove</Button>
+              </div>
             </div>
-            <div className="flex gap-2 flex-shrink-0">
-              <button onClick={() => startEdit(m)} className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors">Edit</button>
-              <button onClick={() => deactivate(m.id, m.name)} className="text-xs text-muted-foreground hover:text-red-400 transition-colors">Remove</button>
-            </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

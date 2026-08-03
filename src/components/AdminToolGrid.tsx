@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, ImagePlay, Clock, Star, Megaphone } from "lucide-react";
+import { useAdminRole } from "@/components/AdminRoleContext";
 
 const tools = [
   {
@@ -68,11 +69,11 @@ const settingsTool = {
 };
 
 interface AdminToolGridProps {
-  role?: string;
   onNavigate?: () => void;
 }
 
-export default function AdminToolGrid({ role, onNavigate }: AdminToolGridProps) {
+export default function AdminToolGrid({ onNavigate }: AdminToolGridProps) {
+  const role = useAdminRole();
   const visibleTools = role === "president" ? [...tools, settingsTool] : tools;
 
   return (

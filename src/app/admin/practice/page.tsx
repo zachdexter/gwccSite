@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useConfirm } from "@/components/useConfirm";
 import { toast } from "sonner";
 import { WEEKDAYS } from "@/lib/practiceTimes";
 
@@ -30,6 +31,7 @@ export default function PracticeTimesPage() {
   const [editing, setEditing] = useState<PracticeTime | null>(null);
   const [form, setForm] = useState({ day: "Monday", startTime: "19:00", endTime: "21:00" });
   const [saving, setSaving] = useState(false);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   async function fetchTimes() {
     const res = await fetch("/api/practice-times");
@@ -88,7 +90,7 @@ export default function PracticeTimesPage() {
   }
 
   async function remove(t: PracticeTime) {
-    if (!confirm(`Remove ${t.day} practice?`)) return;
+    if (!(await confirm(`Remove ${t.day} practice?`))) return;
     const res = await fetch("/api/practice-times", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -102,6 +104,7 @@ export default function PracticeTimesPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Practice Times</h1>
@@ -184,9 +187,9 @@ export default function PracticeTimesPage() {
                 <button onClick={() => startEdit(t)} className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors">
                   Edit
                 </button>
-                <button onClick={() => remove(t)} className="text-xs text-muted-foreground hover:text-red-400 transition-colors">
+                <Button variant="destructive" size="xs" onClick={() => remove(t)}>
                   Remove
-                </button>
+                </Button>
               </div>
             </div>
           ))

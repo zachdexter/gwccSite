@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getSemesterWeeks, getAttendanceStatus } from "@/lib/semester";
+import { useAdminRole } from "@/components/AdminRoleContext";
 import type { Semester } from "@/lib/db/schema";
 
 type Member = {
@@ -39,7 +40,7 @@ function MemberDetailPage() {
   const [member, setMember] = useState<Member | null>(null);
   const [semesters, setSemesters] = useState<SemesterWithCount[]>([]);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
-  const [role, setRole] = useState<string | null>(null);
+  const role = useAdminRole();
   const [loading, setLoading] = useState(true);
   const [addDate, setAddDate] = useState(new Date().toISOString().split("T")[0]);
   const [saving, setSaving] = useState(false);
@@ -48,20 +49,13 @@ function MemberDetailPage() {
 
   useEffect(() => {
     async function load() {
-      const [dataRes, sessionRes] = await Promise.all([
-        fetch(`/api/members/${id}/attendance`),
-        fetch("/api/session"),
-      ]);
+      const dataRes = await fetch(`/api/members/${id}/attendance`);
       if (dataRes.ok) {
         const data = await dataRes.json();
         setMember(data.member);
         setSemesters(data.semesters);
         setLogs(data.logs);
         setNotes(data.member.notes ?? "");
-      }
-      if (sessionRes.ok) {
-        const s = await sessionRes.json();
-        setRole(s.role);
       }
       setLoading(false);
     }

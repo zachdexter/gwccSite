@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useConfirm } from "@/components/useConfirm";
 import { toast } from "sonner";
 
 type Alert = {
@@ -27,6 +28,7 @@ export default function AlertsPage() {
     return toDatetimeLocal(d);
   });
   const [saving, setSaving] = useState(false);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   async function fetchAlerts() {
     const res = await fetch("/api/alerts");
@@ -66,7 +68,7 @@ export default function AlertsPage() {
   }
 
   async function remove(a: Alert) {
-    if (!confirm("Remove this alert now?")) return;
+    if (!(await confirm("Remove this alert now?"))) return;
     const res = await fetch("/api/alerts", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -80,6 +82,7 @@ export default function AlertsPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Alerts</h1>
@@ -147,9 +150,9 @@ export default function AlertsPage() {
                   Disappears {new Date(a.expiresAt).toLocaleString()}
                 </p>
               </div>
-              <button onClick={() => remove(a)} className="text-xs text-muted-foreground hover:text-red-400 transition-colors shrink-0">
+              <Button variant="destructive" size="xs" onClick={() => remove(a)} className="shrink-0">
                 Remove
-              </button>
+              </Button>
             </div>
           ))
         )}

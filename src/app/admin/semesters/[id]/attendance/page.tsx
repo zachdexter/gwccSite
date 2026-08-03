@@ -38,6 +38,7 @@ export default function AttendanceMatrixPage() {
   const [data, setData] = useState<MatrixData | null>(null);
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState<string | null>(null);
+  const [expandedMemberId, setExpandedMemberId] = useState<number | null>(null);
 
   useEffect(() => {
     fetch(`/api/attendance/matrix?semesterId=${id}`)
@@ -122,7 +123,70 @@ export default function AttendanceMatrixPage() {
         </p>
       </div>
 
-      <div className="rounded-lg border border-border overflow-auto">
+      <div className="md:hidden rounded-lg border border-border divide-y divide-border">
+        {data.members.length === 0 ? (
+          <div className="text-center text-muted-foreground text-sm py-8">No active members.</div>
+        ) : (
+          data.members.map((m) => {
+            const isExpanded = expandedMemberId === m.id;
+            return (
+              <div key={m.id}>
+                <button
+                  onClick={() => setExpandedMemberId(isExpanded ? null : m.id)}
+                  className="w-full flex items-center justify-between px-4 py-3"
+                >
+                  <span className="flex items-center gap-2 text-foreground text-sm">
+                    {m.name}
+                    {m.isSubsidized && (
+                      <Badge className="bg-gwcc-gold/15 text-gwcc-gold border-gwcc-gold/30 border text-xs">
+                        subsidized
+                      </Badge>
+                    )}
+                  </span>
+                  <span className="text-muted-foreground text-xs">{isExpanded ? "▲" : "▼"}</span>
+                </button>
+                {isExpanded && (
+                  <div className="px-4 pb-3 space-y-2">
+                    {m.weeklyCounts.map((count, i) => {
+                      const status = getAttendanceStatus(count, new Date(data.weeks[i].weekEnd));
+                      const key = `${m.id}-${i}`;
+                      const busy = pending === key;
+                      return (
+                        <div key={i} className="flex items-center justify-between">
+                          <span className="text-muted-foreground text-xs">
+                            {weekLabel(data.weeks[i].weekStart, data.weeks[i].weekEnd)}
+                          </span>
+                          <div className="flex items-center gap-3">
+                            <button
+                              onClick={() => adjustCell(m, i, -1)}
+                              disabled={busy || count <= 0}
+                              className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-red-400 disabled:opacity-20 disabled:hover:text-muted-foreground transition-colors text-sm leading-none border border-border rounded"
+                              aria-label={`Remove a check-in for ${m.name}`}
+                            >
+                              −
+                            </button>
+                            <span className={`text-sm w-4 text-center ${statusColor[status]}`}>{count}</span>
+                            <button
+                              onClick={() => adjustCell(m, i, 1)}
+                              disabled={busy}
+                              className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-gwcc-gold disabled:opacity-20 transition-colors text-sm leading-none border border-border rounded"
+                              aria-label={`Add a check-in for ${m.name}`}
+                            >
+                              +
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <div className="hidden md:block rounded-lg border border-border overflow-auto">
         <table className="text-sm border-collapse">
           <thead>
             <tr>
