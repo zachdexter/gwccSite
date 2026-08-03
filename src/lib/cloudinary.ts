@@ -15,7 +15,7 @@ export async function uploadToCloudinary(
     const uploadStream = cloudinary.uploader.upload_stream(
       {
         folder,
-        public_id: filename.replace(/\.[^/.]+$/, ""),
+        filename_override: filename,
         use_filename: true,
         unique_filename: true,
         overwrite: false,

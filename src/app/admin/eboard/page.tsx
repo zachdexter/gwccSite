@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useConfirm } from "@/components/useConfirm";
+import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { toast } from "sonner";
 
 type EboardMember = {
@@ -28,6 +29,9 @@ export default function EboardAdminPage() {
     name: "", role: "", year: "Fr", displayOrder: 0,
   });
   const [headshotFile, setHeadshotFile] = useState<File | null>(null);
+  const [headshotPreview, setHeadshotPreview] = useState<string | null>(null);
+  const [cropSource, setCropSource] = useState<File | null>(null);
+  const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
   const { confirm, ConfirmDialog } = useConfirm();
@@ -43,8 +47,17 @@ export default function EboardAdminPage() {
   function resetForm() {
     setForm({ name: "", role: "", year: "Fr", displayOrder: 0 });
     setHeadshotFile(null);
+    if (headshotPreview) URL.revokeObjectURL(headshotPreview);
+    setHeadshotPreview(null);
+    setCropSource(null);
     setEditing(null);
     setShowAdd(false);
+  }
+
+  function onCropped(file: File) {
+    setHeadshotFile(file);
+    if (headshotPreview) URL.revokeObjectURL(headshotPreview);
+    setHeadshotPreview(URL.createObjectURL(file));
   }
 
   async function uploadHeadshot(file: File): Promise<string | null> {
@@ -121,6 +134,12 @@ export default function EboardAdminPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       {ConfirmDialog}
+      <ImageCropDialog
+        file={cropSource}
+        open={cropDialogOpen}
+        onOpenChange={setCropDialogOpen}
+        onCropped={onCropped}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-foreground">Eboard</h1>
@@ -180,17 +199,30 @@ export default function EboardAdminPage() {
               ref={fileRef}
               type="file"
               accept="image/*"
-              onChange={(e) => setHeadshotFile(e.target.files?.[0] ?? null)}
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                if (f) {
+                  setCropSource(f);
+                  setCropDialogOpen(true);
+                }
+                e.target.value = "";
+              }}
               className="hidden"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileRef.current?.click()}
-              className="w-full justify-start font-normal text-foreground"
-            >
-              {headshotFile ? headshotFile.name : "Choose file…"}
-            </Button>
+            <div className="flex items-center gap-2">
+              {headshotPreview && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={headshotPreview} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileRef.current?.click()}
+                className="flex-1 justify-start font-normal text-foreground"
+              >
+                {headshotFile ? "Change photo…" : "Choose file…"}
+              </Button>
+            </div>
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={saving} className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90">
