@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { galleryPhotos } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
 
@@ -49,6 +49,35 @@ export async function POST(req: Request) {
     .returning();
 
   return NextResponse.json(photo, { status: 201 });
+}
+
+export async function PATCH(req: Request) {
+  const session = await auth();
+  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id, isShowcase } = await req.json();
+  if (typeof id !== "number") return NextResponse.json({ error: "id required" }, { status: 400 });
+  if (typeof isShowcase !== "boolean") {
+    return NextResponse.json({ error: "isShowcase required" }, { status: 400 });
+  }
+
+  const [target] = await db.select().from(galleryPhotos).where(eq(galleryPhotos.id, id));
+  if (!target) return NextResponse.json({ error: "Photo not found" }, { status: 404 });
+
+  if (isShowcase && target.albumId !== null) {
+    await db
+      .update(galleryPhotos)
+      .set({ isShowcase: false })
+      .where(and(eq(galleryPhotos.albumId, target.albumId), eq(galleryPhotos.isShowcase, true)));
+  }
+
+  const [photo] = await db
+    .update(galleryPhotos)
+    .set({ isShowcase })
+    .where(eq(galleryPhotos.id, id))
+    .returning();
+
+  return NextResponse.json(photo);
 }
 
 export async function DELETE(req: Request) {

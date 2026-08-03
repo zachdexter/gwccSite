@@ -2,9 +2,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { db } from "@/lib/db";
 import { galleryAlbums, galleryPhotos } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { PageTransition } from "@/components/PageTransition";
 import { NavLinks } from "@/components/NavLinks";
+import { PhotoGrid } from "@/components/PhotoGrid";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +25,13 @@ export default async function AlbumPage({
     .select()
     .from(galleryPhotos)
     .where(eq(galleryPhotos.albumId, albumId))
-    .orderBy(desc(galleryPhotos.uploadedAt));
+    .orderBy(asc(galleryPhotos.uploadedAt));
+
+  const showcaseIndex = photos.findIndex((p) => p.isShowcase);
+  const showcasePhoto = showcaseIndex !== -1 ? photos[showcaseIndex] : photos[0];
+  const orderedPhotos = showcasePhoto
+    ? [showcasePhoto, ...photos.filter((p) => p.id !== showcasePhoto.id)]
+    : photos;
 
   return (
     <PageTransition>
@@ -60,29 +67,9 @@ export default async function AlbumPage({
           {photos.length === 0 ? (
             <div className="text-muted-foreground text-center py-20">No photos in this album.</div>
           ) : (
-            <div className="columns-2 sm:columns-3 lg:columns-4 gap-3 space-y-3">
-              {photos.map((photo) => (
-                <div
-                  key={photo.id}
-                  className="break-inside-avoid rounded-lg overflow-hidden bg-card border border-border"
-                >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={photo.secureUrl}
-                    alt={photo.filename}
-                    className="w-full h-auto block"
-                    loading="lazy"
-                  />
-                </div>
-              ))}
-            </div>
+            <PhotoGrid photos={orderedPhotos} />
           )}
         </main>
-
-        <footer className="border-t border-border px-6 py-5 flex items-center justify-between text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-foreground transition-colors">← Home</Link>
-          <Link href="/login" className="hover:text-foreground transition-colors">Eboard Login</Link>
-        </footer>
       </div>
     </PageTransition>
   );

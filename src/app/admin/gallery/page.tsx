@@ -22,6 +22,7 @@ type Photo = {
   filename: string;
   uploadedAt: string;
   albumId: number | null;
+  isShowcase: boolean;
 };
 
 export default function GalleryAdminPage() {
@@ -137,6 +138,26 @@ export default function GalleryAdminPage() {
     if (fileRef.current) fileRef.current.value = "";
   }
 
+  async function toggleShowcase(photo: Photo) {
+    const isShowcase = !photo.isShowcase;
+    const res = await fetch("/api/gallery", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: photo.id, isShowcase }),
+    });
+    if (res.ok) {
+      setPhotos((prev) =>
+        prev.map((p) => {
+          if (p.id === photo.id) return { ...p, isShowcase };
+          return isShowcase && p.isShowcase ? { ...p, isShowcase: false } : p;
+        })
+      );
+      toast.success(isShowcase ? "Set as showcase photo" : "Removed as showcase photo");
+    } else {
+      toast.error("Failed to update showcase photo");
+    }
+  }
+
   async function deletePhoto(photo: Photo) {
     if (!confirm(`Delete ${photo.filename}?`)) return;
     const res = await fetch("/api/gallery", {
@@ -196,7 +217,9 @@ export default function GalleryAdminPage() {
             {photos.map((photo) => (
               <div
                 key={photo.id}
-                className="group relative aspect-square rounded-lg overflow-hidden bg-card border border-border"
+                className={`group relative aspect-square rounded-lg overflow-hidden bg-card border ${
+                  photo.isShowcase ? "border-gwcc-gold ring-2 ring-gwcc-gold" : "border-border"
+                }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -204,7 +227,18 @@ export default function GalleryAdminPage() {
                   alt={photo.filename}
                   className="w-full h-full object-cover"
                 />
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                {photo.isShowcase && (
+                  <div className="absolute top-1.5 left-1.5 bg-gwcc-gold text-gwcc-dark text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded">
+                    Showcase
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
+                  <button
+                    onClick={() => toggleShowcase(photo)}
+                    className="text-gwcc-gold hover:text-gwcc-gold/80 text-sm font-medium"
+                  >
+                    {photo.isShowcase ? "Unset Showcase" : "Set as Showcase"}
+                  </button>
                   <button
                     onClick={() => deletePhoto(photo)}
                     className="text-red-400 hover:text-red-300 text-sm font-medium"
