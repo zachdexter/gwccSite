@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Cropper, type ReactCropperElement } from "react-cropper";
+import "cropperjs/dist/cropper.css";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 
@@ -13,11 +15,8 @@ type ImageCropDialogProps = {
 
 export function ImageCropDialog({ file, open, onOpenChange, onCropped }: ImageCropDialogProps) {
   const [imageSrc, setImageSrc] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(1);
-  const [posX, setPosX] = useState(50);
-  const [posY, setPosY] = useState(50);
   const [saving, setSaving] = useState(false);
-  const imgRef = useRef<HTMLImageElement>(null);
+  const cropperRef = useRef<ReactCropperElement>(null);
 
   useEffect(() => {
     if (!file) {
@@ -26,36 +25,14 @@ export function ImageCropDialog({ file, open, onOpenChange, onCropped }: ImageCr
     }
     const url = URL.createObjectURL(file);
     setImageSrc(url);
-    setZoom(1);
-    setPosX(50);
-    setPosY(50);
     return () => URL.revokeObjectURL(url);
   }, [file]);
 
   function handleSave() {
-    const img = imgRef.current;
-    if (!img || !file) return;
+    const cropper = cropperRef.current?.cropper;
+    if (!cropper || !file) return;
     setSaving(true);
-
-    const naturalWidth = img.naturalWidth;
-    const naturalHeight = img.naturalHeight;
-    const cropSize = Math.min(naturalWidth, naturalHeight) / zoom;
-    const centerX = (posX / 100) * naturalWidth;
-    const centerY = (posY / 100) * naturalHeight;
-    const cropX = Math.min(Math.max(centerX - cropSize / 2, 0), naturalWidth - cropSize);
-    const cropY = Math.min(Math.max(centerY - cropSize / 2, 0), naturalHeight - cropSize);
-
-    const canvas = document.createElement("canvas");
-    canvas.width = cropSize;
-    canvas.height = cropSize;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) {
-      setSaving(false);
-      return;
-    }
-    ctx.drawImage(img, cropX, cropY, cropSize, cropSize, 0, 0, cropSize, cropSize);
-
-    canvas.toBlob((blob) => {
+    cropper.getCroppedCanvas().toBlob((blob) => {
       setSaving(false);
       if (!blob) return;
       onCropped(new File([blob], file.name, { type: blob.type }));
@@ -71,73 +48,20 @@ export function ImageCropDialog({ file, open, onOpenChange, onCropped }: ImageCr
         </DialogHeader>
 
         {imageSrc && (
-          <>
-            <div className="w-full aspect-square bg-muted rounded-md overflow-hidden">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                ref={imgRef}
-                src={imageSrc}
-                alt=""
-                className="w-full h-full"
-                style={{
-                  objectFit: "cover",
-                  objectPosition: `${posX}% ${posY}%`,
-                  transform: `scale(${zoom})`,
-                  transformOrigin: `${posX}% ${posY}%`,
-                }}
-              />
-            </div>
-
-            <div className="space-y-3">
-              <label className="block text-xs text-muted-foreground">
-                Zoom
-                <input
-                  type="range"
-                  min={1}
-                  max={3}
-                  step={0.01}
-                  value={zoom}
-                  onChange={(e) => setZoom(Number(e.target.value))}
-                  className="w-full"
-                />
-              </label>
-              <label className="block text-xs text-muted-foreground">
-                Horizontal position
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={posX}
-                  onChange={(e) => setPosX(Number(e.target.value))}
-                  className="w-full"
-                />
-              </label>
-              <label className="block text-xs text-muted-foreground">
-                Vertical position
-                <input
-                  type="range"
-                  min={0}
-                  max={100}
-                  step={1}
-                  value={posY}
-                  onChange={(e) => setPosY(Number(e.target.value))}
-                  className="w-full"
-                />
-              </label>
-              <button
-                type="button"
-                onClick={() => {
-                  setZoom(1);
-                  setPosX(50);
-                  setPosY(50);
-                }}
-                className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors"
-              >
-                Reset
-              </button>
-            </div>
-          </>
+          <div className="w-full h-72 bg-muted rounded-md overflow-hidden">
+            <Cropper
+              ref={cropperRef}
+              src={imageSrc}
+              style={{ height: "100%", width: "100%" }}
+              aspectRatio={1}
+              viewMode={1}
+              dragMode="move"
+              guides
+              background={false}
+              responsive
+              autoCropArea={1}
+            />
+          </div>
         )}
 
         <DialogFooter>
