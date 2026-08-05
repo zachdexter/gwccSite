@@ -19,23 +19,19 @@ type CompMember = {
   headshotUrl: string | null;
 };
 
-type Zone = "header" | "left" | "right";
+type Device = "desktop" | "mobile";
 
 type Item = {
   id: string;
-  zone: Zone;
+  device: Device;
   src: string;
-  xPct: number;
-  yPct: number;
+  x: number;
+  y: number;
   size: number;
   rotate: number;
 };
 
-const ZONE_LABELS: Record<Zone, string> = {
-  header: "Header (scrolls away)",
-  left: "Left side (fixed)",
-  right: "Right side (fixed)",
-};
+const MOBILE_WIDTH = 343; // ~390px phone viewport minus px-6 padding on each side
 
 let nextId = 0;
 
@@ -46,12 +42,9 @@ export default function ScatterCompEditor() {
   const [copied, setCopied] = useState(false);
   const [available, setAvailable] = useState<string[]>([]);
   const [folder, setFolder] = useState<"navysvgs" | "whitesvgs">("whitesvgs");
-  const [pickerZone, setPickerZone] = useState<Zone>("header");
   const [pickerOpen, setPickerOpen] = useState(false);
-
+  const [device, setDevice] = useState<Device>("desktop");
   const headerRef = useRef<HTMLDivElement>(null);
-  const leftRef = useRef<HTMLDivElement>(null);
-  const rightRef = useRef<HTMLDivElement>(null);
   const dragId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -88,12 +81,13 @@ export default function ScatterCompEditor() {
 
   function addItem(filename: string) {
     const id = `${filename.replace(".svg", "")}-${nextId++}`;
+    const rect = headerRef.current?.getBoundingClientRect();
     const newItem: Item = {
       id,
-      zone: pickerZone,
+      device,
       src: `/${folder}/${filename}`,
-      xPct: 50,
-      yPct: 50,
+      x: rect ? rect.width / 2 : 100,
+      y: rect ? rect.height / 2 : 50,
       size: 32,
       rotate: 0,
     };
@@ -114,69 +108,36 @@ export default function ScatterCompEditor() {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   }
 
-  function makeOnPointerMove(ref: React.RefObject<HTMLDivElement | null>) {
-    return (e: React.PointerEvent) => {
-      if (!dragId.current || !ref.current) return;
-      const rect = ref.current.getBoundingClientRect();
-      const xPct = Math.min(100, Math.max(0, ((e.clientX - rect.left) / rect.width) * 100));
-      const yPct = Math.min(100, Math.max(0, ((e.clientY - rect.top) / rect.height) * 100));
-      updateItem(dragId.current, { xPct, yPct });
-    };
+  function onPointerMove(e: React.PointerEvent) {
+    if (!dragId.current || !headerRef.current) return;
+    const rect = headerRef.current.getBoundingClientRect();
+    const x = Math.min(rect.width, Math.max(0, e.clientX - rect.left));
+    const y = Math.min(rect.height, Math.max(0, e.clientY - rect.top));
+    updateItem(dragId.current, { x, y });
   }
-
-  const onHeaderPointerMove = makeOnPointerMove(headerRef);
-  const onLeftPointerMove = makeOnPointerMove(leftRef);
-  const onRightPointerMove = makeOnPointerMove(rightRef);
 
   function onPointerUp() {
     dragId.current = null;
   }
 
+  const visibleItems = items.filter((it) => it.device === device);
   const selectedItem = items.find((it) => it.id === selected) ?? null;
-  const headerItems = items.filter((it) => it.zone === "header");
-  const leftItems = items.filter((it) => it.zone === "left");
-  const rightItems = items.filter((it) => it.zone === "right");
-
-  function renderIcon(it: Item) {
-    return (
-      <img
-        key={it.id}
-        src={it.src}
-        alt=""
-        onPointerDown={(e) => onPointerDown(e, it.id)}
-        onClick={(e) => e.stopPropagation()}
-        className={`select-none absolute cursor-grab active:cursor-grabbing ${
-          selected === it.id ? "ring-2 ring-gwcc-gold rounded-full" : ""
-        }`}
-        style={{
-          left: `${it.xPct}%`,
-          top: `${it.yPct}%`,
-          width: it.size,
-          height: it.size,
-          transform: `translate(-50%, -50%) rotate(${it.rotate}deg)`,
-          touchAction: "none",
-        }}
-      />
-    );
-  }
 
   function generateCode() {
-    function section(zone: Zone, label: string) {
-      const zoneItems = items.filter((it) => it.zone === zone);
-      if (zoneItems.length === 0) return `// --- ${label} --- (none)`;
-      const body = zoneItems
+    function section(dev: Device, label: string) {
+      const devItems = items.filter((it) => it.device === dev);
+      if (devItems.length === 0) return `// --- ${label} --- (none)`;
+      const body = devItems
         .map(
           (it) =>
-            `  { src: "${it.src}", left: ${it.xPct.toFixed(1)}, top: ${it.yPct.toFixed(1)}, size: ${it.size}${
+            `  { src: "${it.src}", left: ${it.x.toFixed(1)}, top: ${it.y.toFixed(1)}, size: ${it.size}${
               it.rotate ? `, rotate: ${it.rotate}` : ""
             } },`
         )
         .join("\n");
       return `// --- ${label} ---\n${body}`;
     }
-    return [section("header", "HEADER icons"), section("left", "LEFT side icons"), section("right", "RIGHT side icons")].join(
-      "\n\n"
-    );
+    return [section("desktop", "DESKTOP header icons"), section("mobile", "MOBILE header icons")].join("\n\n");
   }
 
   async function copyCode() {
@@ -187,41 +148,54 @@ export default function ScatterCompEditor() {
 
   return (
     <div className="min-h-screen bg-background" onClick={() => setSelected(null)}>
-      <div
-        ref={leftRef}
-        onPointerMove={onLeftPointerMove}
-        onPointerUp={onPointerUp}
-        onClick={(e) => e.stopPropagation()}
-        className="fixed left-0 top-0 h-screen w-56 overflow-hidden border-r border-dashed border-gwcc-gold/30 bg-gwcc-dark/40"
-      >
-        {leftItems.map(renderIcon)}
-      </div>
-      <div
-        ref={rightRef}
-        onPointerMove={onRightPointerMove}
-        onPointerUp={onPointerUp}
-        onClick={(e) => e.stopPropagation()}
-        className="fixed right-0 top-0 h-screen w-56 overflow-hidden border-l border-dashed border-gwcc-gold/30 bg-gwcc-dark/40"
-      >
-        {rightItems.map(renderIcon)}
-      </div>
-
       <SiteHeader />
-      <main className="px-6 py-16 max-w-5xl mx-auto w-full">
+      <main
+        className={
+          device === "desktop"
+            ? "px-6 py-16 max-w-5xl mx-auto w-full"
+            : "px-6 py-16 mx-auto w-full"
+        }
+        style={device === "mobile" ? { maxWidth: MOBILE_WIDTH + 48 } : undefined}
+      >
         <div
           ref={headerRef}
-          onPointerMove={onHeaderPointerMove}
+          onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onClick={(e) => e.stopPropagation()}
-          className="relative mb-12 outline outline-dashed outline-gwcc-gold/20"
+          className="relative mb-12 overflow-hidden outline outline-dashed outline-gwcc-gold/20"
         >
           <div className="pointer-events-none">
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
               Competitive Team
             </div>
-            <h1 className="font-heading text-5xl md:text-6xl leading-tight text-foreground">Meet the Team</h1>
+            <h1
+              className={`font-heading leading-tight text-foreground ${
+                device === "desktop" ? "text-5xl md:text-6xl" : "text-5xl"
+              }`}
+            >
+              Meet the Team
+            </h1>
           </div>
-          {headerItems.map(renderIcon)}
+          {visibleItems.map((it) => (
+            <img
+              key={it.id}
+              src={it.src}
+              alt=""
+              onPointerDown={(e) => onPointerDown(e, it.id)}
+              onClick={(e) => e.stopPropagation()}
+              className={`select-none absolute cursor-grab active:cursor-grabbing ${
+                selected === it.id ? "ring-2 ring-gwcc-gold rounded-full" : ""
+              }`}
+              style={{
+                left: it.x,
+                top: it.y,
+                width: it.size,
+                height: it.size,
+                transform: `translate(-50%, -50%) rotate(${it.rotate}deg)`,
+                touchAction: "none",
+              }}
+            />
+          ))}
         </div>
 
         <div className="pointer-events-none">
@@ -246,7 +220,6 @@ export default function ScatterCompEditor() {
                 Delete
               </button>
             </div>
-            <div className="text-xs text-muted-foreground">{ZONE_LABELS[selectedItem.zone]}</div>
             <label className="block text-xs text-muted-foreground">
               Size: {selectedItem.size}px
               <input
@@ -273,7 +246,27 @@ export default function ScatterCompEditor() {
         )}
 
         <div className="flex items-center gap-2 bg-popover border border-border rounded-lg p-2 shadow-lg">
-          <span className="text-xs text-muted-foreground px-1">{items.length} icon{items.length === 1 ? "" : "s"}</span>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setDevice("desktop")}
+              className={`text-xs px-2 py-1.5 rounded ${
+                device === "desktop" ? "bg-gwcc-gold text-gwcc-dark" : "border border-border text-muted-foreground"
+              }`}
+            >
+              Desktop
+            </button>
+            <button
+              onClick={() => setDevice("mobile")}
+              className={`text-xs px-2 py-1.5 rounded ${
+                device === "mobile" ? "bg-gwcc-gold text-gwcc-dark" : "border border-border text-muted-foreground"
+              }`}
+            >
+              Mobile
+            </button>
+          </div>
+          <span className="text-xs text-muted-foreground px-1">
+            {visibleItems.length} icon{visibleItems.length === 1 ? "" : "s"}
+          </span>
           <button
             onClick={copyCode}
             disabled={items.length === 0}
@@ -293,26 +286,12 @@ export default function ScatterCompEditor() {
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add an icon</DialogTitle>
+            <DialogTitle>Add an icon ({device})</DialogTitle>
             <DialogDescription>
-              Pick a zone, then click an icon to drop it in and drag it into place. Header icons scroll away with
-              the page; left/right side icons are fixed to the screen. Dialog stays open so you can add more.
+              Click an icon to drop it into the header area and drag it into place. Dialog stays open so you can
+              add more. Switch Desktop/Mobile in the bottom-right bar to edit each layout separately.
             </DialogDescription>
           </DialogHeader>
-
-          <div className="flex gap-1">
-            {(["header", "left", "right"] as Zone[]).map((z) => (
-              <button
-                key={z}
-                onClick={() => setPickerZone(z)}
-                className={`text-xs px-2 py-1 rounded flex-1 ${
-                  pickerZone === z ? "bg-gwcc-gold text-gwcc-dark" : "border border-border text-muted-foreground"
-                }`}
-              >
-                {ZONE_LABELS[z]}
-              </button>
-            ))}
-          </div>
 
           <div className="flex items-center justify-between">
             <div className="text-sm font-semibold text-foreground">/{folder}</div>
@@ -349,11 +328,11 @@ export default function ScatterCompEditor() {
             ))}
           </div>
 
-          {items.length > 0 && (
+          {visibleItems.length > 0 && (
             <div className="text-xs text-muted-foreground border-t border-border pt-3">
-              <div className="font-semibold mb-1 text-foreground">Current items ({items.length})</div>
+              <div className="font-semibold mb-1 text-foreground">Current items ({visibleItems.length})</div>
               <div className="space-y-1 max-h-40 overflow-y-auto">
-                {items.map((it) => (
+                {visibleItems.map((it) => (
                   <div
                     key={it.id}
                     onClick={() => {
@@ -365,7 +344,7 @@ export default function ScatterCompEditor() {
                     }`}
                   >
                     <span>
-                      [{it.zone}] {it.id} — {it.xPct.toFixed(0)}%, {it.yPct.toFixed(0)}%
+                      {it.id} — {it.x.toFixed(0)}px, {it.y.toFixed(0)}px
                     </span>
                     <button
                       onClick={(e) => {

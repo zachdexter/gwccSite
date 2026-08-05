@@ -1,3 +1,6 @@
+import { RandomSideIcons } from "@/components/RandomSideIcons";
+import { SIDE_ICON_POOL } from "@/lib/decorIconPool";
+
 type DecorIcon = {
   src: string;
   left: number;
@@ -6,83 +9,74 @@ type DecorIcon = {
   rotate?: number;
 };
 
-function IconLayer({ icons, className }: { icons: DecorIcon[]; className: string }) {
-  return (
-    <div className={className}>
-      {icons.map((icon, i) => (
-        <img
-          key={`${icon.src}-${i}`}
-          src={icon.src}
-          alt=""
-          className="pointer-events-none select-none absolute"
-          style={{
-            left: `${icon.left}%`,
-            top: `${icon.top}%`,
-            width: icon.size,
-            height: icon.size,
-            transform: `translate(-50%, -50%) rotate(${icon.rotate ?? 0}deg)`,
-          }}
-        />
-      ))}
-    </div>
-  );
-}
-
-// Relative to the title block only (from the eyebrow label down to just above the
-// grid). Scrolls away with the page. Paste "header" output from /dev/scatter-eboard here.
+// Fixed pixel offsets from the title block's top-left corner (authored at a ~976px-wide
+// desktop header zone). Scrolls away with the page. On narrower screens the icons keep
+// these exact pixel positions and simply get clipped by the container's overflow-hidden
+// instead of repositioning onto the (possibly wrapped) title text — same "crop at the
+// edges" behavior as the /login page. Paste "desktop" output from /dev/scatter-eboard here.
+// Shown at md (768px) and up.
 const headerIcons: DecorIcon[] = [
-  { src: "/whitesvgs/star4.svg", left: 56.0, top: 64.5, size: 32 },
-  { src: "/whitesvgs/star9.svg", left: 34.6, top: 9.2, size: 32 },
-  { src: "/navysvgs/star19.svg", left: 21.1, top: 100.0, size: 32 },
-  { src: "/navysvgs/star7.svg", left: 11.8, top: 18.9, size: 32 },
-  { src: "/whitesvgs/dude.svg", left: 68.5, top: 100.0, size: 49 },
-  { src: "/whitesvgs/climbstar.svg", left: 88.6, top: 45.1, size: 67 },
+  { src: "/whitesvgs/star4.svg", left: 434.0, top: 17.8, size: 32 },
+  { src: "/navysvgs/star20.svg", left: 157.2, top: 22.6, size: 32 },
+  { src: "/navysvgs/star9.svg", left: 553.2, top: 70.6, size: 32 },
+  { src: "/whitesvgs/climbstar.svg", left: 885.2, top: 61.0, size: 76, rotate: 25 },
+  { src: "/navysvgs/mountain.svg", left: 673.2, top: 81.8, size: 46 },
+  { src: "/navysvgs/star7.svg", left: 763.6, top: 32.2, size: 32 },
 ];
 
-// Relative to a fixed 224px-wide, full-viewport-tall strip in the left/right margins.
-// Fixed to the screen — never scrolls. Paste "left"/"right" output from /dev/scatter-eboard here.
-const leftIcons: DecorIcon[] = [
-  { src: "/whitesvgs/hold5.svg", left: 57.9, top: 48.4, size: 32 },
-  { src: "/whitesvgs/hold11.svg", left: 15.4, top: 75.9, size: 32, rotate: -97 },
-  { src: "/whitesvgs/star17.svg", left: 72.5, top: 57.8, size: 32 },
-  { src: "/whitesvgs/star2.svg", left: 25.4, top: 88.1, size: 32 },
-  { src: "/whitesvgs/star11.svg", left: 28.2, top: 24.5, size: 32 },
-  { src: "/whitesvgs/hold10.svg", left: 70.4, top: 34.1, size: 32, rotate: 13 },
-  { src: "/whitesvgs/carabiner.svg", left: 21.4, top: 62.4, size: 32, rotate: 42 },
-  { src: "/whitesvgs/quickdraw.svg", left: 87.5, top: 69.1, size: 44 },
-  { src: "/navysvgs/star19.svg", left: 18.2, top: 42.4, size: 32 },
-  { src: "/navysvgs/star7.svg", left: 63.9, top: 92.1, size: 32 },
-  { src: "/navysvgs/star11.svg", left: 68.2, top: 11.4, size: 32 },
-];
-const rightIcons: DecorIcon[] = [
-  { src: "/navysvgs/star1.svg", left: 73.6, top: 9.7, size: 32 },
-  { src: "/navysvgs/star12.svg", left: 72.5, top: 59.2, size: 32 },
-  { src: "/navysvgs/star8.svg", left: 20.4, top: 45.2, size: 32 },
-  { src: "/navysvgs/hold6.svg", left: 82.9, top: 75.4, size: 32 },
-  { src: "/navysvgs/hold1.svg", left: 38.2, top: 87.2, size: 32 },
-  { src: "/whitesvgs/star1.svg", left: 73.9, top: 36.8, size: 32 },
-  { src: "/whitesvgs/star20.svg", left: 21.1, top: 64.9, size: 32 },
-  { src: "/whitesvgs/star9.svg", left: 46.8, top: 31.5, size: 32 },
-  { src: "/whitesvgs/hold3.svg", left: 21.4, top: 19.5, size: 32, rotate: 76 },
-  { src: "/whitesvgs/rockon.svg", left: 62.9, top: 48.7, size: 49 },
-  { src: "/whitesvgs/star2.svg", left: 66.8, top: 83.8, size: 32 },
+// Same idea, but authored against a ~343px-wide mobile header zone (matches a ~390px
+// phone viewport minus page padding), with the mobile (non-md) title typography.
+// Shown below md (768px). Paste "mobile" output from /dev/scatter-eboard here.
+const headerIconsMobile: DecorIcon[] = [
+  { src: "/whitesvgs/climbstar.svg", left: 250.3, top: 116.2, size: 65, rotate: 16 },
+  { src: "/whitesvgs/star13.svg", left: 297.5, top: 22.6, size: 32 },
+  { src: "/whitesvgs/star18.svg", left: 139.9, top: 23.4, size: 32 },
+  { src: "/whitesvgs/star3.svg", left: 106.3, top: 129.0, size: 32 },
 ];
 
 export function EboardHeaderIcons() {
-  return <IconLayer icons={headerIcons} className="absolute inset-0 pointer-events-none" />;
-}
-
-export function EboardSideFrame() {
   return (
     <>
-      <IconLayer
-        icons={leftIcons}
-        className="fixed left-0 top-0 h-screen w-56 overflow-hidden pointer-events-none hidden 2xl:block"
-      />
-      <IconLayer
-        icons={rightIcons}
-        className="fixed right-0 top-0 h-screen w-56 overflow-hidden pointer-events-none hidden 2xl:block"
-      />
+      <div className="hidden md:block absolute inset-0 pointer-events-none overflow-hidden">
+        {headerIcons.map((icon, i) => (
+          <img
+            key={`${icon.src}-${i}`}
+            src={icon.src}
+            alt=""
+            className="pointer-events-none select-none absolute"
+            style={{
+              left: icon.left,
+              top: icon.top,
+              width: icon.size,
+              height: icon.size,
+              transform: `translate(-50%, -50%) rotate(${icon.rotate ?? 0}deg)`,
+            }}
+          />
+        ))}
+      </div>
+      <div className="md:hidden absolute inset-0 pointer-events-none overflow-hidden">
+        {headerIconsMobile.map((icon, i) => (
+          <img
+            key={`${icon.src}-${i}`}
+            src={icon.src}
+            alt=""
+            className="pointer-events-none select-none absolute"
+            style={{
+              left: icon.left,
+              top: icon.top,
+              width: icon.size,
+              height: icon.size,
+              transform: `translate(-50%, -50%) rotate(${icon.rotate ?? 0}deg)`,
+            }}
+          />
+        ))}
+      </div>
     </>
   );
+}
+
+// Left/right margins — procedurally generated on every page load, scrolls with
+// the page, and automatically fills whatever height the roster ends up being.
+export function EboardSideFrame() {
+  return <RandomSideIcons pool={SIDE_ICON_POOL} />;
 }
