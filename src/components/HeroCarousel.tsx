@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 
 interface HeroPhoto {
   id: number;
@@ -10,6 +10,8 @@ interface HeroPhoto {
 
 export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
   const [index, setIndex] = useState(0);
+  const { scrollY } = useScroll();
+  const dotsOpacity = useTransform(scrollY, [0, 150], [1, 0]);
 
   useEffect(() => {
     if (photos.length <= 1) return;
@@ -41,7 +43,10 @@ export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
       <div className="absolute inset-0 bg-gradient-to-b from-gwcc-dark/65 via-gwcc-dark/55 to-gwcc-dark/85" />
 
       {photos.length > 1 && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+        <motion.div
+          style={{ opacity: dotsOpacity }}
+          className="absolute top-16 left-1/2 -translate-x-1/2 flex gap-2 z-10"
+        >
           {photos.map((_, i) => (
             <button
               key={i}
@@ -51,7 +56,7 @@ export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
               }`}
             />
           ))}
-        </div>
+        </motion.div>
       )}
     </div>
   );

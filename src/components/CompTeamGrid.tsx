@@ -33,7 +33,7 @@ export function CompTeamGrid({ members }: { members: CompMember[] }) {
         <motion.div
           key={m.id}
           variants={item}
-          className="bg-card border border-border rounded-xl overflow-hidden"
+          className="bg-card border border-border rounded-xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
         >
           {m.headshotUrl ? (
             // eslint-disable-next-line @next/next/no-img-element

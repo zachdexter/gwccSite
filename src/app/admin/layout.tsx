@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { signOut } from "@/auth";
 import NavMenuButton from "./NavMenuButton";
+import BackButton from "./BackButton";
 import { AdminRoleProvider } from "@/components/AdminRoleContext";
 
 export default async function AdminLayout({
@@ -16,19 +17,22 @@ export default async function AdminLayout({
     <AdminRoleProvider role={session.user.role}>
       <div className="min-h-screen flex flex-col bg-background">
         <header className="sticky top-0 z-20 bg-gwcc-navy border-b border-white/10 px-4 py-3 flex items-center justify-between">
-          <form
-            action={async () => {
-              "use server";
-              await signOut({ redirectTo: "/" });
-            }}
-          >
-            <button
-              type="submit"
-              className="text-gwcc-gold font-bold tracking-wide text-sm hover:opacity-70 transition-opacity"
+          <div className="flex items-center gap-4">
+            <form
+              action={async () => {
+                "use server";
+                await signOut({ redirectTo: "/" });
+              }}
             >
-              GWCC
-            </button>
-          </form>
+              <button
+                type="submit"
+                className="text-gwcc-gold font-bold tracking-wide text-sm hover:opacity-70 transition-opacity"
+              >
+                GWCC
+              </button>
+            </form>
+            <BackButton />
+          </div>
           <NavMenuButton />
         </header>
 

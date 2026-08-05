@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { PageTransition } from "@/components/PageTransition";
 import { EboardGrid } from "@/components/EboardGrid";
 import { SiteHeader } from "@/components/SiteHeader";
+import { EboardHeaderIcons, EboardSideFrame } from "@/components/EboardDecorIcons";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +17,13 @@ export default async function EboardPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="relative min-h-screen bg-background flex flex-col">
+        <EboardSideFrame />
         <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-5xl mx-auto w-full">
-          <div className="mb-12">
+          <div className="relative mb-12">
+            <EboardHeaderIcons />
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
               Leadership
             </div>

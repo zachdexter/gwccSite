@@ -36,15 +36,16 @@ export default function ScatterEditor() {
   const [selected, setSelected] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [available, setAvailable] = useState<string[]>([]);
+  const [folder, setFolder] = useState<"navysvgs" | "whitesvgs">("navysvgs");
   const containerRef = useRef<HTMLDivElement>(null);
   const dragId = useRef<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/dev/svgs")
+    fetch(`/api/dev/svgs?dir=${folder}`)
       .then((r) => r.json())
       .then((data) => setAvailable(data.files ?? []))
       .catch(() => setAvailable([]));
-  }, []);
+  }, [folder]);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -68,7 +69,7 @@ export default function ScatterEditor() {
     const id = `${filename.replace(".svg", "")}-${nextId++}`;
     const newItem: Item = {
       id,
-      src: `/navysvgs/${filename}`,
+      src: `/${folder}/${filename}`,
       xPct: 50,
       yPct: 50,
       size: 32,
@@ -205,7 +206,27 @@ export default function ScatterEditor() {
         )}
 
         <div className="border border-border rounded-md p-3">
-          <div className="text-sm font-semibold mb-2">Add from /navysvgs</div>
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-sm font-semibold">Add from /{folder}</div>
+            <div className="flex gap-1">
+              <button
+                onClick={() => setFolder("navysvgs")}
+                className={`text-xs px-2 py-1 rounded ${
+                  folder === "navysvgs" ? "bg-gwcc-gold text-gwcc-dark" : "border border-border text-muted-foreground"
+                }`}
+              >
+                Navy
+              </button>
+              <button
+                onClick={() => setFolder("whitesvgs")}
+                className={`text-xs px-2 py-1 rounded ${
+                  folder === "whitesvgs" ? "bg-gwcc-gold text-gwcc-dark" : "border border-border text-muted-foreground"
+                }`}
+              >
+                White
+              </button>
+            </div>
+          </div>
           <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto">
             {available.map((filename) => (
               <button
@@ -214,7 +235,7 @@ export default function ScatterEditor() {
                 onClick={() => addItem(filename)}
                 className="aspect-square flex items-center justify-center border border-border rounded hover:border-gwcc-gold bg-card p-1"
               >
-                <img src={`/navysvgs/${filename}`} alt={filename} className="w-full h-full object-contain" />
+                <img src={`/${folder}/${filename}`} alt={filename} className="w-full h-full object-contain" />
               </button>
             ))}
           </div>

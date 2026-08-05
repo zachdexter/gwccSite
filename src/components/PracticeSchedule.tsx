@@ -9,7 +9,7 @@ type PracticeTime = {
 
 const container = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.12 } },
+  show: { transition: { staggerChildren: 0.1 } },
 };
 
 const item = {
@@ -31,15 +31,21 @@ export function PracticeSchedule({ times }: { times: PracticeTime[] }) {
       >
         Practice Schedule
       </motion.h2>
-      <div className="grid sm:grid-cols-2 gap-4">
-        {times.map((p) => (
+      <div className="flex flex-col divide-y divide-border sm:flex-row sm:flex-wrap sm:justify-center sm:divide-y-0">
+        {times.map((p, i) => (
           <motion.div
             key={p.day}
             variants={item}
-            className="bg-card border border-border rounded-lg px-5 py-4"
+            className={`flex items-center justify-between py-3 sm:flex-col sm:justify-center sm:px-6 sm:py-2 sm:first:pl-0 sm:last:pr-0 ${
+              i > 0 ? "sm:border-l sm:border-border" : ""
+            }`}
           >
-            <div className="text-card-foreground font-semibold">{p.day}</div>
-            <div className="text-muted-foreground text-sm mt-1">{p.time}</div>
+            <div className="font-heading text-sm uppercase tracking-wide text-card-foreground">
+              {p.day.slice(0, 3)}
+            </div>
+            <div className="text-muted-foreground text-sm sm:mt-1 whitespace-nowrap">
+              {p.time}
+            </div>
           </motion.div>
         ))}
       </div>

@@ -20,6 +20,17 @@ const item = {
   show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" as const } },
 };
 
+const YEAR_LABELS: Record<string, string> = {
+  Fr: "Freshman",
+  So: "Sophomore",
+  Jr: "Junior",
+  Sr: "Senior",
+};
+
+function formatYear(year: string) {
+  return YEAR_LABELS[year] ?? year;
+}
+
 export function EboardGrid({ members }: { members: EboardMember[] }) {
   return (
     <motion.div
@@ -33,7 +44,7 @@ export function EboardGrid({ members }: { members: EboardMember[] }) {
         <motion.div
           key={m.id}
           variants={item}
-          className="bg-card border border-border rounded-xl overflow-hidden"
+          className="bg-card border border-border rounded-xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
         >
           {m.headshotUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -51,7 +62,7 @@ export function EboardGrid({ members }: { members: EboardMember[] }) {
             <p className="text-gwcc-gold text-xs uppercase tracking-widest font-semibold">{m.role}</p>
             <div className="flex items-baseline gap-2">
               <h2 className="text-card-foreground font-semibold">{m.name}</h2>
-              <span className="text-muted-foreground text-xs">{m.year}</span>
+              <span className="text-muted-foreground text-xs">{formatYear(m.year)}</span>
             </div>
           </div>
         </motion.div>

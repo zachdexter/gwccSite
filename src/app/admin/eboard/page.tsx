@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useConfirm } from "@/components/useConfirm";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
+import { ReorderableList } from "@/components/ReorderableList";
 import { toast } from "sonner";
 
 type EboardMember = {
@@ -18,7 +19,7 @@ type EboardMember = {
   isActive: boolean;
 };
 
-const YEARS = ["Fr", "So", "Jr", "Sr", "Alumni"];
+const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Alumni"];
 
 export default function EboardAdminPage() {
   const [members, setMembers] = useState<EboardMember[]>([]);
@@ -26,7 +27,7 @@ export default function EboardAdminPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<EboardMember | null>(null);
   const [form, setForm] = useState({
-    name: "", role: "", year: "Fr", displayOrder: 0,
+    name: "", role: "", year: "Freshman",
   });
   const [headshotFile, setHeadshotFile] = useState<File | null>(null);
   const [headshotPreview, setHeadshotPreview] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export default function EboardAdminPage() {
   useEffect(() => { fetchMembers(); }, []);
 
   function resetForm() {
-    setForm({ name: "", role: "", year: "Fr", displayOrder: 0 });
+    setForm({ name: "", role: "", year: "Freshman" });
     setHeadshotFile(null);
     if (headshotPreview) URL.revokeObjectURL(headshotPreview);
     setHeadshotPreview(null);
@@ -82,7 +83,7 @@ export default function EboardAdminPage() {
       if (uploaded) headshotUrl = uploaded;
     }
 
-    const payload = { ...form, headshotUrl };
+    const payload = editing ? { ...form, headshotUrl } : { ...form, headshotUrl, displayOrder: members.length };
 
     if (editing) {
       const res = await fetch("/api/eboard", {
@@ -127,8 +128,26 @@ export default function EboardAdminPage() {
 
   function startEdit(m: EboardMember) {
     setEditing(m);
-    setForm({ name: m.name, role: m.role, year: m.year, displayOrder: m.displayOrder });
+    setForm({ name: m.name, role: m.role, year: m.year });
     setShowAdd(true);
+  }
+
+  async function handleReorder(newOrder: EboardMember[]) {
+    const changed = newOrder
+      .map((m, i) => ({ id: m.id, displayOrder: i, prev: m.displayOrder }))
+      .filter((m) => m.displayOrder !== m.prev);
+
+    setMembers(newOrder.map((m, i) => ({ ...m, displayOrder: i })));
+
+    await Promise.all(
+      changed.map(({ id, displayOrder }) =>
+        fetch("/api/eboard", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, displayOrder }),
+        })
+      )
+    );
   }
 
   return (
@@ -172,26 +191,15 @@ export default function EboardAdminPage() {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-muted-foreground text-xs">Year</Label>
-              <select
-                value={form.year}
-                onChange={(e) => setForm({ ...form, year: e.target.value })}
-                className="w-full h-10 px-3 rounded-md bg-muted border border-border text-foreground text-sm"
-              >
-                {YEARS.map((y) => <option key={y}>{y}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-muted-foreground text-xs">Display Order</Label>
-              <Input
-                type="number"
-                value={form.displayOrder}
-                onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) })}
-                className="bg-muted border-border text-foreground"
-              />
-            </div>
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">Year</Label>
+            <select
+              value={form.year}
+              onChange={(e) => setForm({ ...form, year: e.target.value })}
+              className="w-full h-10 px-3 rounded-md bg-muted border border-border text-foreground text-sm"
+            >
+              {YEARS.map((y) => <option key={y}>{y}</option>)}
+            </select>
           </div>
           <div className="space-y-1">
             <Label className="text-muted-foreground text-xs">Headshot (optional)</Label>
@@ -233,33 +241,37 @@ export default function EboardAdminPage() {
         </form>
       )}
 
-      <div className="space-y-3">
+      <div>
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">Loading…</div>
         ) : members.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">No eboard members yet.</div>
         ) : (
-          members.map((m) => (
-            <div key={m.id} className="flex items-center gap-4 bg-card border border-border rounded-lg px-4 py-3">
-              {m.headshotUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.headshotUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-muted border border-border flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-card-foreground font-medium">{m.name}</span>
-                  <span className="text-muted-foreground text-xs">{m.year}</span>
+          <ReorderableList
+            items={members}
+            onReorder={handleReorder}
+            renderItem={(m) => (
+              <div className="flex items-center gap-4 bg-card border border-border rounded-lg px-4 py-3">
+                {m.headshotUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.headshotUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-muted border border-border flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-card-foreground font-medium">{m.name}</span>
+                    <span className="text-muted-foreground text-xs">{m.year}</span>
+                  </div>
+                  <p className="text-gwcc-gold text-xs mt-0.5">{m.role}</p>
                 </div>
-                <p className="text-gwcc-gold text-xs mt-0.5">{m.role}</p>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => startEdit(m)} className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors">Edit</button>
+                  <Button variant="destructive" size="xs" onClick={() => deactivate(m.id, m.name)}>Remove</Button>
+                </div>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => startEdit(m)} className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors">Edit</button>
-                <Button variant="destructive" size="xs" onClick={() => deactivate(m.id, m.name)}>Remove</Button>
-              </div>
-            </div>
-          ))
+            )}
+          />
         )}
       </div>
     </div>

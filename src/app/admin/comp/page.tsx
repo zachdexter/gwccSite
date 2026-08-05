@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useConfirm } from "@/components/useConfirm";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
+import { ReorderableList } from "@/components/ReorderableList";
 import { toast } from "sonner";
 
 type CompMember = {
@@ -26,7 +27,7 @@ export default function CompAdminPage() {
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<CompMember | null>(null);
   const [form, setForm] = useState({
-    name: "", year: "Fr", bio: "", displayOrder: 0,
+    name: "", year: "Fr", bio: "",
   });
   const [headshotFile, setHeadshotFile] = useState<File | null>(null);
   const [headshotPreview, setHeadshotPreview] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export default function CompAdminPage() {
   useEffect(() => { fetchMembers(); }, []);
 
   function resetForm() {
-    setForm({ name: "", year: "Fr", bio: "", displayOrder: 0 });
+    setForm({ name: "", year: "Fr", bio: "" });
     setHeadshotFile(null);
     if (headshotPreview) URL.revokeObjectURL(headshotPreview);
     setHeadshotPreview(null);
@@ -82,7 +83,7 @@ export default function CompAdminPage() {
       if (uploaded) headshotUrl = uploaded;
     }
 
-    const payload = { ...form, headshotUrl };
+    const payload = editing ? { ...form, headshotUrl } : { ...form, headshotUrl, displayOrder: members.length };
 
     if (editing) {
       const res = await fetch("/api/comp", {
@@ -127,8 +128,26 @@ export default function CompAdminPage() {
 
   function startEdit(m: CompMember) {
     setEditing(m);
-    setForm({ name: m.name, year: m.year, bio: m.bio ?? "", displayOrder: m.displayOrder });
+    setForm({ name: m.name, year: m.year, bio: m.bio ?? "" });
     setShowAdd(true);
+  }
+
+  async function handleReorder(newOrder: CompMember[]) {
+    const changed = newOrder
+      .map((m, i) => ({ id: m.id, displayOrder: i, prev: m.displayOrder }))
+      .filter((m) => m.displayOrder !== m.prev);
+
+    setMembers(newOrder.map((m, i) => ({ ...m, displayOrder: i })));
+
+    await Promise.all(
+      changed.map(({ id, displayOrder }) =>
+        fetch("/api/comp", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, displayOrder }),
+        })
+      )
+    );
   }
 
   return (
@@ -181,46 +200,35 @@ export default function CompAdminPage() {
               className="w-full px-3 py-2 rounded-md bg-muted border border-border text-foreground text-sm resize-none"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-muted-foreground text-xs">Headshot (optional)</Label>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const f = e.target.files?.[0] ?? null;
-                  if (f) {
-                    setCropSource(f);
-                    setCropDialogOpen(true);
-                  }
-                  e.target.value = "";
-                }}
-                className="hidden"
-              />
-              <div className="flex items-center gap-2">
-                {headshotPreview && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={headshotPreview} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fileRef.current?.click()}
-                  className="flex-1 justify-start font-normal text-foreground"
-                >
-                  {headshotFile ? "Change photo…" : "Choose file…"}
-                </Button>
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-muted-foreground text-xs">Display Order</Label>
-              <Input
-                type="number"
-                value={form.displayOrder}
-                onChange={(e) => setForm({ ...form, displayOrder: Number(e.target.value) })}
-                className="bg-muted border-border text-foreground"
-              />
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">Headshot (optional)</Label>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              onChange={(e) => {
+                const f = e.target.files?.[0] ?? null;
+                if (f) {
+                  setCropSource(f);
+                  setCropDialogOpen(true);
+                }
+                e.target.value = "";
+              }}
+              className="hidden"
+            />
+            <div className="flex items-center gap-2">
+              {headshotPreview && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={headshotPreview} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileRef.current?.click()}
+                className="flex-1 justify-start font-normal text-foreground"
+              >
+                {headshotFile ? "Change photo…" : "Choose file…"}
+              </Button>
             </div>
           </div>
           <div className="flex gap-2">
@@ -232,33 +240,37 @@ export default function CompAdminPage() {
         </form>
       )}
 
-      <div className="space-y-3">
+      <div>
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">Loading…</div>
         ) : members.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">No comp team members yet.</div>
         ) : (
-          members.map((m) => (
-            <div key={m.id} className="flex items-center gap-4 bg-card border border-border rounded-lg px-4 py-3">
-              {m.headshotUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={m.headshotUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-10 h-10 rounded-full bg-muted border border-border flex-shrink-0" />
-              )}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-card-foreground font-medium">{m.name}</span>
-                  <span className="text-muted-foreground text-xs">{m.year}</span>
+          <ReorderableList
+            items={members}
+            onReorder={handleReorder}
+            renderItem={(m) => (
+              <div className="flex items-center gap-4 bg-card border border-border rounded-lg px-4 py-3">
+                {m.headshotUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={m.headshotUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-muted border border-border flex-shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-card-foreground font-medium">{m.name}</span>
+                    <span className="text-muted-foreground text-xs">{m.year}</span>
+                  </div>
+                  {m.bio && <p className="text-muted-foreground text-xs mt-0.5 truncate">{m.bio}</p>}
                 </div>
-                {m.bio && <p className="text-muted-foreground text-xs mt-0.5 truncate">{m.bio}</p>}
+                <div className="flex gap-2 flex-shrink-0">
+                  <button onClick={() => startEdit(m)} className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors">Edit</button>
+                  <Button variant="destructive" size="xs" onClick={() => deactivate(m.id, m.name)}>Remove</Button>
+                </div>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <button onClick={() => startEdit(m)} className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors">Edit</button>
-                <Button variant="destructive" size="xs" onClick={() => deactivate(m.id, m.name)}>Remove</Button>
-              </div>
-            </div>
-          ))
+            )}
+          />
         )}
       </div>
     </div>
