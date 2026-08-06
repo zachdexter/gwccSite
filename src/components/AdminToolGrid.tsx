@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, ImagePlay, Clock, Star, Megaphone } from "lucide-react";
+import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, Clock, Star, Megaphone } from "lucide-react";
 import { useAdminRole } from "@/components/AdminRoleContext";
 
 const tools = [
@@ -26,7 +26,7 @@ const tools = [
   {
     href: "/admin/gallery",
     label: "Gallery",
-    description: "Upload & manage photos",
+    description: "Sync from Drive & pick cover photos",
     icon: Images,
   },
   {
@@ -40,12 +40,6 @@ const tools = [
     label: "Eboard",
     description: "Manage eboard roster",
     icon: Star,
-  },
-  {
-    href: "/admin/hero",
-    label: "Home Photos",
-    description: "Pick photos for the carousel",
-    icon: ImagePlay,
   },
   {
     href: "/admin/practice",

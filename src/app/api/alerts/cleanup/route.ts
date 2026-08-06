@@ -1,9 +1,19 @@
+import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { alerts } from "@/lib/db/schema";
 import { lt } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: Request) {
+  // Accept Vercel cron secret or a valid admin session
+  const authHeader = req.headers.get("authorization");
+  const cronSecret = process.env.CRON_SECRET;
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    const session = await auth();
+    if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   await db.delete(alerts).where(lt(alerts.expiresAt, new Date()));
   return NextResponse.json({ ok: true });
 }

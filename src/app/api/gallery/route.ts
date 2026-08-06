@@ -3,7 +3,9 @@ import { db } from "@/lib/db";
 import { galleryPhotos } from "@/lib/db/schema";
 import { and, eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
+
+// Photos and albums are managed via Google Drive sync (see /api/sync-gallery).
+// This route only supports reading photos and choosing an album's cover/hero photo.
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -25,30 +27,6 @@ export async function GET(req: Request) {
 
   const photos = await query;
   return NextResponse.json(photos);
-}
-
-export async function POST(req: Request) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const formData = await req.formData();
-  const file = formData.get("file") as File | null;
-  const albumIdRaw = formData.get("albumId");
-
-  if (!file) return NextResponse.json({ error: "No file provided" }, { status: 400 });
-
-  const albumId = albumIdRaw ? parseInt(albumIdRaw as string) : NaN;
-  if (isNaN(albumId)) return NextResponse.json({ error: "albumId required" }, { status: 400 });
-
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const { public_id, secure_url } = await uploadToCloudinary(buffer, "gwcc/gallery", file.name);
-
-  const [photo] = await db
-    .insert(galleryPhotos)
-    .values({ cloudinaryId: public_id, secureUrl: secure_url, filename: file.name, albumId })
-    .returning();
-
-  return NextResponse.json(photo, { status: 201 });
 }
 
 export async function PATCH(req: Request) {
@@ -78,16 +56,4 @@ export async function PATCH(req: Request) {
     .returning();
 
   return NextResponse.json(photo);
-}
-
-export async function DELETE(req: Request) {
-  const session = await auth();
-  if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  const { id, cloudinaryId } = await req.json();
-
-  await deleteFromCloudinary(cloudinaryId);
-  await db.delete(galleryPhotos).where(eq(galleryPhotos.id, id));
-
-  return NextResponse.json({ ok: true });
 }

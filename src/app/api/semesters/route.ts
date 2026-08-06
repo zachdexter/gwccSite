@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { semesters } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -37,8 +37,9 @@ export async function PATCH(req: Request) {
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
   if (activate) {
-    await db.update(semesters).set({ isActive: false });
-    await db.update(semesters).set({ isActive: true }).where(eq(semesters.id, id));
+    // Single atomic statement: every row's isActive is set based on whether
+    // it matches `id`, so there's no window where zero or two semesters are active.
+    await db.update(semesters).set({ isActive: sql`${semesters.id} = ${id}` });
     return NextResponse.json({ ok: true });
   }
 

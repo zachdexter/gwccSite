@@ -17,6 +17,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "role and newPassword required" }, { status: 400 });
   }
 
+  if (typeof newPassword !== "string" || newPassword.length < 8) {
+    return NextResponse.json(
+      { error: "New password must be at least 8 characters" },
+      { status: 400 }
+    );
+  }
+
   if (role === "president") {
     if (!currentPassword) {
       return NextResponse.json({ error: "currentPassword required" }, { status: 400 });

@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { members, subsidyChanges } from "@/lib/db/schema";
+import { pick } from "@/lib/pick";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -37,8 +38,11 @@ export async function PATCH(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, ...updates } = await req.json();
+  const body = await req.json();
+  const { id } = body;
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+  const updates = pick(body, ["name", "email", "isSubsidized", "isActive", "notes"]);
 
   const [updated] = await db
     .update(members)
