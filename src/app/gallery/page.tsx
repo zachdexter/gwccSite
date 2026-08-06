@@ -4,7 +4,7 @@ import { desc } from "drizzle-orm";
 import { PageTransition } from "@/components/PageTransition";
 import { AlbumGrid } from "@/components/AlbumGrid";
 import { SiteHeader } from "@/components/SiteHeader";
-import { GalleryHeaderIcons, GallerySideFrame } from "@/components/GalleryDecorIcons";
+import { GalleryHeaderIcons, GalleryDecorFill } from "@/components/GalleryDecorIcons";
 
 export const dynamic = "force-dynamic";
 
@@ -26,16 +26,18 @@ export default async function GalleryPage() {
   return (
     <PageTransition>
       <div className="relative min-h-screen bg-background flex flex-col">
-        <GallerySideFrame />
+        <GalleryDecorFill />
         <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-6xl mx-auto w-full">
-          <div id="decor-header-zone" className="relative py-14 mb-12">
+          <div id="decor-header-zone" className="relative py-20 mb-12">
             <GalleryHeaderIcons />
-            <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
-              Photos
+            <div id="decor-title-block" className="inline-block">
+              <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
+                Photos
+              </div>
+              <h1 className="font-heading text-5xl leading-tight text-foreground">Gallery</h1>
             </div>
-            <h1 className="font-heading text-5xl md:text-6xl leading-tight text-foreground">Gallery</h1>
           </div>
 
           <div id="decor-content-end">

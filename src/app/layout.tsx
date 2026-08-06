@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { SN_Pro, Bebas_Neue } from "next/font/google";
+import { SN_Pro, Bebas_Neue, Oswald } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
@@ -12,6 +12,11 @@ const snPro = SN_Pro({
 const bebasNeue = Bebas_Neue({
   weight: "400",
   variable: "--font-bebas",
+  subsets: ["latin"],
+});
+
+const oswald = Oswald({
+  variable: "--font-oswald",
   subsets: ["latin"],
 });
 
@@ -33,7 +38,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${snPro.variable} ${bebasNeue.variable} h-full antialiased`}
+      className={`${snPro.variable} ${bebasNeue.variable} ${oswald.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">

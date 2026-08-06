@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { SiteHeader } from "@/components/SiteHeader";
-import { EboardGrid } from "@/components/EboardGrid";
 import {
   Dialog,
   DialogContent,
@@ -10,14 +8,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-type EboardMember = {
-  id: number;
-  name: string;
-  role: string;
-  year: string;
-  headshotUrl: string | null;
-};
 
 type Item = {
   id: string;
@@ -28,29 +18,24 @@ type Item = {
   rotate: number;
 };
 
-// Author against the narrowest real case — the cluster stays small/tight to the text, so
-// it reads correctly at any wider viewport too (see /components/EboardDecorIcons.tsx).
-const CANVAS_WIDTH = 343; // ~390px phone viewport minus px-6 padding on each side
+// Matches the real drawer's rendered width closely enough for placement purposes
+// (data-[side=right]:w-4/5 data-[side=right]:sm:max-w-sm in NavLinks.tsx).
+const DRAWER_WIDTH = 320;
+const DRAWER_HEIGHT = 700;
+
+const drawerLinks = ["Competitive Team", "Eboard", "Gallery", "Get Involved"];
 
 let nextId = 0;
 
-export default function ScatterEboardEditor() {
-  const [members, setMembers] = useState<EboardMember[]>([]);
+export default function ScatterMenuEditor() {
   const [items, setItems] = useState<Item[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [available, setAvailable] = useState<string[]>([]);
-  const [folder, setFolder] = useState<"navysvgs" | "whitesvgs">("whitesvgs");
+  const [folder, setFolder] = useState<"navysvgs" | "whitesvgs">("navysvgs");
   const [pickerOpen, setPickerOpen] = useState(false);
-  const headerRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const dragId = useRef<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/eboard")
-      .then((r) => r.json())
-      .then((data) => setMembers(data ?? []))
-      .catch(() => setMembers([]));
-  }, []);
 
   useEffect(() => {
     fetch(`/api/dev/svgs?dir=${folder}`)
@@ -79,12 +64,12 @@ export default function ScatterEboardEditor() {
 
   function addItem(filename: string) {
     const id = `${filename.replace(".svg", "")}-${nextId++}`;
-    const rect = headerRef.current?.getBoundingClientRect();
+    const rect = canvasRef.current?.getBoundingClientRect();
     const newItem: Item = {
       id,
       src: `/${folder}/${filename}`,
-      x: rect ? rect.width / 2 : CANVAS_WIDTH / 2,
-      y: rect ? rect.height / 2 : 50,
+      x: rect ? rect.width / 2 : DRAWER_WIDTH / 2,
+      y: rect ? rect.height / 2 : DRAWER_HEIGHT / 2,
       size: 32,
       rotate: 0,
     };
@@ -106,8 +91,8 @@ export default function ScatterEboardEditor() {
   }
 
   function onPointerMove(e: React.PointerEvent) {
-    if (!dragId.current || !headerRef.current) return;
-    const rect = headerRef.current.getBoundingClientRect();
+    if (!dragId.current || !canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
     const x = Math.min(rect.width, Math.max(0, e.clientX - rect.left));
     const y = Math.min(rect.height, Math.max(0, e.clientY - rect.top));
     updateItem(dragId.current, { x, y });
@@ -138,52 +123,47 @@ export default function ScatterEboardEditor() {
   }
 
   return (
-    <div className="min-h-screen bg-background" onClick={() => setSelected(null)}>
-      <SiteHeader />
-      <main className="px-6 py-16 mx-auto w-full" style={{ maxWidth: CANVAS_WIDTH + 48 }}>
-        <div
-          ref={headerRef}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onClick={(e) => e.stopPropagation()}
-          className="relative py-20 mb-12 overflow-hidden outline outline-dashed outline-gwcc-gold/20"
-        >
-          <div className="pointer-events-none">
-            <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
-              Eboard
+    <div className="min-h-screen bg-background flex items-center justify-center py-16" onClick={() => setSelected(null)}>
+      <div
+        ref={canvasRef}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onClick={(e) => e.stopPropagation()}
+        className="relative bg-gwcc-dark overflow-hidden outline outline-dashed outline-gwcc-gold/30 shadow-xl"
+        style={{ width: DRAWER_WIDTH, height: DRAWER_HEIGHT }}
+      >
+        <nav className="pointer-events-none flex flex-col gap-1 px-4 pt-10">
+          {drawerLinks.map((label) => (
+            <div
+              key={label}
+              className="block w-full px-4 py-3 rounded-md font-oswald text-2xl tracking-wide underline decoration-1 decoration-current/30 underline-offset-8 text-muted-foreground"
+            >
+              {label}
             </div>
-            <h1 className="font-heading leading-tight text-foreground text-5xl">Meet the Eboard</h1>
-          </div>
-          {items.map((it) => (
-            <img
-              key={it.id}
-              src={it.src}
-              alt=""
-              onPointerDown={(e) => onPointerDown(e, it.id)}
-              onClick={(e) => e.stopPropagation()}
-              className={`select-none absolute cursor-grab active:cursor-grabbing ${
-                selected === it.id ? "ring-2 ring-gwcc-gold rounded-full" : ""
-              }`}
-              style={{
-                left: it.x,
-                top: it.y,
-                width: it.size,
-                height: it.size,
-                transform: `translate(-50%, -50%) rotate(${it.rotate}deg)`,
-                touchAction: "none",
-              }}
-            />
           ))}
-        </div>
+        </nav>
 
-        <div className="pointer-events-none">
-          {members.length === 0 ? (
-            <div className="text-muted-foreground text-center py-20">Loading real eboard data…</div>
-          ) : (
-            <EboardGrid members={members} />
-          )}
-        </div>
-      </main>
+        {items.map((it) => (
+          <img
+            key={it.id}
+            src={it.src}
+            alt=""
+            onPointerDown={(e) => onPointerDown(e, it.id)}
+            onClick={(e) => e.stopPropagation()}
+            className={`select-none absolute cursor-grab active:cursor-grabbing ${
+              selected === it.id ? "ring-2 ring-gwcc-gold rounded-full" : ""
+            }`}
+            style={{
+              left: it.x,
+              top: it.y,
+              width: it.size,
+              height: it.size,
+              transform: `translate(-50%, -50%) rotate(${it.rotate}deg)`,
+              touchAction: "none",
+            }}
+          />
+        ))}
+      </div>
 
       {/* Floating controls — fixed, so they never affect the canvas width */}
       <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-2">
@@ -248,9 +228,8 @@ export default function ScatterEboardEditor() {
           <DialogHeader>
             <DialogTitle>Add an icon</DialogTitle>
             <DialogDescription>
-              Click an icon to drop it into the header area and drag it into place. Dialog stays open so you can
-              add more. Keep the cluster small and close to the text — it&apos;s shown at every viewport width now, and
-              a separate procedural fill covers the rest of the page.
+              Click an icon to drop it into the drawer canvas and drag it into place. Dialog stays open so you can
+              add more.
             </DialogDescription>
           </DialogHeader>
 

@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { PageTransition } from "@/components/PageTransition";
 import { CompTeamGrid } from "@/components/CompTeamGrid";
 import { SiteHeader } from "@/components/SiteHeader";
-import { CompHeaderIcons, CompSideFrame } from "@/components/CompDecorIcons";
+import { CompHeaderIcons, CompDecorFill } from "@/components/CompDecorIcons";
 
 export const dynamic = "force-dynamic";
 
@@ -18,16 +18,18 @@ export default async function CompPage() {
   return (
     <PageTransition>
       <div className="relative min-h-screen bg-background flex flex-col">
-        <CompSideFrame />
+        <CompDecorFill />
         <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-5xl mx-auto w-full">
-          <div id="decor-header-zone" className="relative py-14 mb-12">
+          <div id="decor-header-zone" className="relative py-20 mb-12">
             <CompHeaderIcons />
-            <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
-              Competitive Team
+            <div id="decor-title-block" className="inline-block">
+              <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
+                Competitive Team
+              </div>
+              <h1 className="font-heading text-5xl leading-tight text-foreground">Meet the Team</h1>
             </div>
-            <h1 className="font-heading text-5xl md:text-6xl leading-tight text-foreground">Meet the Team</h1>
           </div>
 
           <div id="decor-content-end">

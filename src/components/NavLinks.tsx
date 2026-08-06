@@ -11,15 +11,24 @@ import {
   SheetTitle,
   SheetClose,
 } from "@/components/ui/sheet";
+import { MenuDecorIcons } from "@/components/MenuDecorIcons";
 
 const chipBase = "text-xs transition-colors";
 const chipActive = "text-gwcc-gold font-medium";
 const chipInactive = "text-muted-foreground hover:text-gwcc-gold";
 
-const drawerLinkBase = "block w-full px-4 py-3 rounded-md text-base transition-colors";
+const drawerLinkBase =
+  "block w-full px-4 py-3 rounded-md font-oswald text-2xl tracking-wide underline decoration-1 decoration-current/30 underline-offset-8 transition-colors";
 const drawerLinkActive = "bg-gwcc-gold text-gwcc-dark font-medium";
 const drawerLinkInactive =
   "text-muted-foreground hover:bg-gwcc-gold/10 hover:text-gwcc-gold";
+
+const drawerLinks = [
+  { href: "/comp", label: "Competitive Team" },
+  { href: "/eboard", label: "Eboard" },
+  { href: "/gallery", label: "Gallery" },
+  { href: "/contact", label: "Get Involved" },
+];
 
 export function NavLinks() {
   const pathname = usePathname();
@@ -28,6 +37,12 @@ export function NavLinks() {
   const isGallery = pathname.startsWith("/gallery");
   const isEboard = pathname === "/eboard";
   const isContact = pathname === "/contact";
+  const activeByHref: Record<string, boolean> = {
+    "/comp": isComp,
+    "/eboard": isEboard,
+    "/gallery": isGallery,
+    "/contact": isContact,
+  };
 
   return (
     <>
@@ -54,51 +69,30 @@ export function NavLinks() {
           >
             <Menu className="w-3 h-3" />
           </SheetTrigger>
-          <SheetContent side="right">
-            <SheetHeader>
+          <SheetContent
+            side="right"
+            className="bg-gwcc-dark data-[side=right]:w-4/5 data-[side=right]:sm:max-w-sm"
+          >
+            <SheetHeader className="sr-only">
               <SheetTitle>Menu</SheetTitle>
             </SheetHeader>
-            <nav className="flex flex-col gap-1 px-4">
-              <SheetClose
-                render={
-                  <Link
-                    href="/comp"
-                    className={`${drawerLinkBase} ${isComp ? drawerLinkActive : drawerLinkInactive}`}
-                  />
-                }
-              >
-                Competitive Team
-              </SheetClose>
-              <SheetClose
-                render={
-                  <Link
-                    href="/eboard"
-                    className={`${drawerLinkBase} ${isEboard ? drawerLinkActive : drawerLinkInactive}`}
-                  />
-                }
-              >
-                Eboard
-              </SheetClose>
-              <SheetClose
-                render={
-                  <Link
-                    href="/gallery"
-                    className={`${drawerLinkBase} ${isGallery ? drawerLinkActive : drawerLinkInactive}`}
-                  />
-                }
-              >
-                Gallery
-              </SheetClose>
-              <SheetClose
-                render={
-                  <Link
-                    href="/contact"
-                    className={`${drawerLinkBase} ${isContact ? drawerLinkActive : drawerLinkInactive}`}
-                  />
-                }
-              >
-                Get Involved
-              </SheetClose>
+            <MenuDecorIcons />
+            <nav className="flex flex-col gap-1 px-4 pt-10">
+              {drawerLinks.map(({ href, label }) => (
+                <SheetClose
+                  key={href}
+                  render={
+                    <Link
+                      href={href}
+                      className={`${drawerLinkBase} ${
+                        activeByHref[href] ? drawerLinkActive : drawerLinkInactive
+                      }`}
+                    />
+                  }
+                >
+                  {label}
+                </SheetClose>
+              ))}
             </nav>
           </SheetContent>
         </Sheet>

@@ -19,11 +19,8 @@ type Album = {
   coverPhotoUrl: string | null;
 };
 
-type Device = "desktop" | "mobile";
-
 type Item = {
   id: string;
-  device: Device;
   src: string;
   x: number;
   y: number;
@@ -31,7 +28,9 @@ type Item = {
   rotate: number;
 };
 
-const MOBILE_WIDTH = 343; // ~390px phone viewport minus px-6 padding on each side
+// Author against the narrowest real case — the cluster stays small/tight to the text, so
+// it reads correctly at any wider viewport too (see /components/GalleryDecorIcons.tsx).
+const CANVAS_WIDTH = 343; // ~390px phone viewport minus px-6 padding on each side
 
 let nextId = 0;
 
@@ -43,7 +42,6 @@ export default function ScatterGalleryEditor() {
   const [available, setAvailable] = useState<string[]>([]);
   const [folder, setFolder] = useState<"navysvgs" | "whitesvgs">("whitesvgs");
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [device, setDevice] = useState<Device>("desktop");
   const headerRef = useRef<HTMLDivElement>(null);
   const dragId = useRef<string | null>(null);
 
@@ -84,9 +82,8 @@ export default function ScatterGalleryEditor() {
     const rect = headerRef.current?.getBoundingClientRect();
     const newItem: Item = {
       id,
-      device,
       src: `/${folder}/${filename}`,
-      x: rect ? rect.width / 2 : 100,
+      x: rect ? rect.width / 2 : CANVAS_WIDTH / 2,
       y: rect ? rect.height / 2 : 50,
       size: 32,
       rotate: 0,
@@ -120,24 +117,18 @@ export default function ScatterGalleryEditor() {
     dragId.current = null;
   }
 
-  const visibleItems = items.filter((it) => it.device === device);
   const selectedItem = items.find((it) => it.id === selected) ?? null;
 
   function generateCode() {
-    function section(dev: Device, label: string) {
-      const devItems = items.filter((it) => it.device === dev);
-      if (devItems.length === 0) return `// --- ${label} --- (none)`;
-      const body = devItems
-        .map(
-          (it) =>
-            `  { src: "${it.src}", left: ${it.x.toFixed(1)}, top: ${it.y.toFixed(1)}, size: ${it.size}${
-              it.rotate ? `, rotate: ${it.rotate}` : ""
-            } },`
-        )
-        .join("\n");
-      return `// --- ${label} ---\n${body}`;
-    }
-    return [section("desktop", "DESKTOP header icons"), section("mobile", "MOBILE header icons")].join("\n\n");
+    if (items.length === 0) return "// (no icons placed yet)";
+    return items
+      .map(
+        (it) =>
+          `  { src: "${it.src}", left: ${it.x.toFixed(1)}, top: ${it.y.toFixed(1)}, size: ${it.size}${
+            it.rotate ? `, rotate: ${it.rotate}` : ""
+          } },`
+      )
+      .join("\n");
   }
 
   async function copyCode() {
@@ -149,34 +140,21 @@ export default function ScatterGalleryEditor() {
   return (
     <div className="min-h-screen bg-background" onClick={() => setSelected(null)}>
       <SiteHeader />
-      <main
-        className={
-          device === "desktop"
-            ? "px-6 py-16 max-w-6xl mx-auto w-full"
-            : "px-6 py-16 mx-auto w-full"
-        }
-        style={device === "mobile" ? { maxWidth: MOBILE_WIDTH + 48 } : undefined}
-      >
+      <main className="px-6 py-16 mx-auto w-full" style={{ maxWidth: CANVAS_WIDTH + 48 }}>
         <div
           ref={headerRef}
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onClick={(e) => e.stopPropagation()}
-          className="relative py-14 mb-12 overflow-hidden outline outline-dashed outline-gwcc-gold/20"
+          className="relative py-20 mb-12 overflow-hidden outline outline-dashed outline-gwcc-gold/20"
         >
           <div className="pointer-events-none">
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
               Photos
             </div>
-            <h1
-              className={`font-heading leading-tight text-foreground ${
-                device === "desktop" ? "text-5xl md:text-6xl" : "text-5xl"
-              }`}
-            >
-              Gallery
-            </h1>
+            <h1 className="font-heading leading-tight text-foreground text-5xl">Gallery</h1>
           </div>
-          {visibleItems.map((it) => (
+          {items.map((it) => (
             <img
               key={it.id}
               src={it.src}
@@ -251,26 +229,8 @@ export default function ScatterGalleryEditor() {
         )}
 
         <div className="flex items-center gap-2 bg-popover border border-border rounded-lg p-2 shadow-lg">
-          <div className="flex gap-1">
-            <button
-              onClick={() => setDevice("desktop")}
-              className={`text-xs px-2 py-1.5 rounded ${
-                device === "desktop" ? "bg-gwcc-gold text-gwcc-dark" : "border border-border text-muted-foreground"
-              }`}
-            >
-              Desktop
-            </button>
-            <button
-              onClick={() => setDevice("mobile")}
-              className={`text-xs px-2 py-1.5 rounded ${
-                device === "mobile" ? "bg-gwcc-gold text-gwcc-dark" : "border border-border text-muted-foreground"
-              }`}
-            >
-              Mobile
-            </button>
-          </div>
           <span className="text-xs text-muted-foreground px-1">
-            {visibleItems.length} icon{visibleItems.length === 1 ? "" : "s"}
+            {items.length} icon{items.length === 1 ? "" : "s"}
           </span>
           <button
             onClick={copyCode}
@@ -291,10 +251,11 @@ export default function ScatterGalleryEditor() {
       <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Add an icon ({device})</DialogTitle>
+            <DialogTitle>Add an icon</DialogTitle>
             <DialogDescription>
               Click an icon to drop it into the header area and drag it into place. Dialog stays open so you can
-              add more. Switch Desktop/Mobile in the bottom-right bar to edit each layout separately.
+              add more. Keep the cluster small and close to the text — it&apos;s shown at every viewport width now, and
+              a separate procedural fill covers the rest of the page.
             </DialogDescription>
           </DialogHeader>
 
@@ -333,11 +294,11 @@ export default function ScatterGalleryEditor() {
             ))}
           </div>
 
-          {visibleItems.length > 0 && (
+          {items.length > 0 && (
             <div className="text-xs text-muted-foreground border-t border-border pt-3">
-              <div className="font-semibold mb-1 text-foreground">Current items ({visibleItems.length})</div>
+              <div className="font-semibold mb-1 text-foreground">Current items ({items.length})</div>
               <div className="space-y-1 max-h-40 overflow-y-auto">
-                {visibleItems.map((it) => (
+                {items.map((it) => (
                   <div
                     key={it.id}
                     onClick={() => {
