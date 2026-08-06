@@ -22,12 +22,12 @@ export default async function EboardPage() {
         <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-5xl mx-auto w-full">
-          <div id="decor-header-zone" className="relative mb-12">
+          <div id="decor-header-zone" className="relative py-14 mb-12">
             <EboardHeaderIcons />
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
-              Leadership
+              Eboard
             </div>
-            <h1 className="font-heading text-5xl md:text-6xl leading-tight text-foreground">Meet the Leadership Team</h1>
+            <h1 className="font-heading text-5xl md:text-6xl leading-tight text-foreground">Meet the Eboard</h1>
           </div>
 
           <div id="decor-content-end">

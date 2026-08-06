@@ -162,7 +162,7 @@ export default function ScatterCompEditor() {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onClick={(e) => e.stopPropagation()}
-          className="relative mb-12 overflow-hidden outline outline-dashed outline-gwcc-gold/20"
+          className="relative py-14 mb-12 overflow-hidden outline outline-dashed outline-gwcc-gold/20"
         >
           <div className="pointer-events-none">
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">

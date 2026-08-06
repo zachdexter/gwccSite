@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -21,6 +22,19 @@ const item = {
 };
 
 export function AlbumGrid({ albums }: { albums: Album[] }) {
+  // grid-cols-2 below the sm breakpoint, grid-cols-3 at sm and up (matches the classes below)
+  const [cols, setCols] = useState(3);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const update = () => setCols(mq.matches ? 3 : 2);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  const fitsInLastRow = albums.length % cols !== 0;
+
   return (
     <motion.div
       className="grid grid-cols-2 sm:grid-cols-3 gap-4"
@@ -57,6 +71,13 @@ export function AlbumGrid({ albums }: { albums: Album[] }) {
           </Link>
         </motion.div>
       ))}
+      <motion.div
+        variants={item}
+        style={fitsInLastRow ? undefined : { gridColumn: "1 / -1" }}
+        className="flex items-center justify-center"
+      >
+        <p className="text-muted-foreground text-sm py-4">More to come!</p>
+      </motion.div>
     </motion.div>
   );
 }

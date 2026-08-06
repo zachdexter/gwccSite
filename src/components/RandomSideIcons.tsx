@@ -10,9 +10,9 @@ type Point = {
   rotate: number;
 };
 
-const CONTENT_MAX_WIDTH = 1024; // max-w-5xl
+const DEFAULT_CONTENT_MAX_WIDTH = 1024; // max-w-5xl
 const EDGE_SAFETY = 24; // extra buffer kept clear of the content column edge
-const HEADER_PADDING = 24; // extra buffer kept clear below the header zone
+const HEADER_PADDING = 24; // extra buffer kept clear below the top of the header zone
 const MIN_ICON_SIZE = 24;
 const MAX_ICON_SIZE = 40;
 const ICON_RADIUS = MAX_ICON_SIZE / 2;
@@ -85,7 +85,13 @@ function Column({ points, side, width }: { points: Point[]; side: "left" | "righ
   );
 }
 
-export function RandomSideIcons({ pool }: { pool: string[] }) {
+export function RandomSideIcons({
+  pool,
+  contentMaxWidth = DEFAULT_CONTENT_MAX_WIDTH,
+}: {
+  pool: string[];
+  contentMaxWidth?: number;
+}) {
   const [leftPoints, setLeftPoints] = useState<Point[]>([]);
   const [rightPoints, setRightPoints] = useState<Point[]>([]);
   const [stripWidth, setStripWidth] = useState(0);
@@ -101,7 +107,7 @@ export function RandomSideIcons({ pool }: { pool: string[] }) {
         return;
       }
 
-      const gutter = (vw - CONTENT_MAX_WIDTH) / 2;
+      const gutter = (vw - contentMaxWidth) / 2;
       const width = Math.max(0, gutter - EDGE_SAFETY);
       if (width < ICON_RADIUS * 2) {
         setLeftPoints([]);
@@ -114,7 +120,7 @@ export function RandomSideIcons({ pool }: { pool: string[] }) {
         ? contentEndEl.getBoundingClientRect().bottom + window.scrollY + BOTTOM_PADDING
         : document.documentElement.scrollHeight;
       const headerEl = document.getElementById(HEADER_ZONE_ID);
-      const startY = headerEl ? headerEl.getBoundingClientRect().bottom + window.scrollY + HEADER_PADDING : 0;
+      const startY = headerEl ? headerEl.getBoundingClientRect().top + window.scrollY + HEADER_PADDING : 0;
 
       if (Math.abs(height - lastHeight.current) < MIN_HEIGHT_DELTA && width === lastWidth.current) return;
       lastHeight.current = height;
@@ -143,7 +149,7 @@ export function RandomSideIcons({ pool }: { pool: string[] }) {
       window.removeEventListener("resize", onResize);
       clearTimeout(resizeTimer);
     };
-  }, [pool]);
+  }, [pool, contentMaxWidth]);
 
   return (
     <>

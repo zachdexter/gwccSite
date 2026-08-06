@@ -4,6 +4,7 @@ import { desc } from "drizzle-orm";
 import { PageTransition } from "@/components/PageTransition";
 import { AlbumGrid } from "@/components/AlbumGrid";
 import { SiteHeader } from "@/components/SiteHeader";
+import { GalleryHeaderIcons, GallerySideFrame } from "@/components/GalleryDecorIcons";
 
 export const dynamic = "force-dynamic";
 
@@ -24,27 +25,31 @@ export default async function GalleryPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background flex flex-col">
+      <div className="relative min-h-screen bg-background flex flex-col">
+        <GallerySideFrame />
         <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-6xl mx-auto w-full">
-          <div className="mb-12">
+          <div id="decor-header-zone" className="relative py-14 mb-12">
+            <GalleryHeaderIcons />
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
               Photos
             </div>
             <h1 className="font-heading text-5xl md:text-6xl leading-tight text-foreground">Gallery</h1>
           </div>
 
-          {albumsWithMeta.length === 0 ? (
-            <div className="text-muted-foreground text-center py-20">No photos yet.</div>
-          ) : (
-            <div>
-              <h2 className="font-heading text-muted-foreground text-sm uppercase tracking-widest mb-4">
-                Albums
-              </h2>
-              <AlbumGrid albums={albumsWithMeta} />
-            </div>
-          )}
+          <div id="decor-content-end">
+            {albumsWithMeta.length === 0 ? (
+              <div className="text-muted-foreground text-center py-20">No photos yet.</div>
+            ) : (
+              <div>
+                <h2 className="font-heading text-muted-foreground text-sm uppercase tracking-widest mb-4">
+                  Albums
+                </h2>
+                <AlbumGrid albums={albumsWithMeta} />
+              </div>
+            )}
+          </div>
         </main>
       </div>
     </PageTransition>

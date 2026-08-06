@@ -16,23 +16,20 @@ type DecorIcon = {
 // edges" behavior as the /login page. Paste "desktop" output from /dev/scatter-eboard here.
 // Shown at md (768px) and up.
 const headerIcons: DecorIcon[] = [
-  { src: "/whitesvgs/star4.svg", left: 434.0, top: 17.8, size: 32 },
-  { src: "/navysvgs/star20.svg", left: 157.2, top: 22.6, size: 32 },
-  { src: "/navysvgs/star9.svg", left: 553.2, top: 70.6, size: 32 },
-  { src: "/whitesvgs/climbstar.svg", left: 885.2, top: 61.0, size: 76, rotate: 25 },
-  { src: "/navysvgs/mountain.svg", left: 673.2, top: 81.8, size: 46 },
-  { src: "/navysvgs/star7.svg", left: 763.6, top: 32.2, size: 32 },
+  { src: "/whitesvgs/star18.svg", left: 76.4, top: 37.0, size: 32 },
+  { src: "/navysvgs/star19.svg", left: 649.2, top: 149.8, size: 32 },
+  { src: "/navysvgs/star9.svg", left: 145.2, top: 176.2, size: 32 },
+  { src: "/navysvgs/girl.svg", left: 483.6, top: 137.8, size: 52 },
+  { src: "/navysvgs/hold5.svg", left: 866.0, top: 57.8, size: 32, rotate: 54 },
+  { src: "/navysvgs/sclip.svg", left: 795.6, top: 161.8, size: 41, rotate: -28 },
+  { src: "/whitesvgs/star18.svg", left: 241.2, top: 52.2, size: 32 },
+  { src: "/whitesvgs/star11.svg", left: 550.8, top: 38.6, size: 32 },
 ];
 
 // Same idea, but authored against a ~343px-wide mobile header zone (matches a ~390px
 // phone viewport minus page padding), with the mobile (non-md) title typography.
 // Shown below md (768px). Paste "mobile" output from /dev/scatter-eboard here.
-const headerIconsMobile: DecorIcon[] = [
-  { src: "/whitesvgs/climbstar.svg", left: 250.3, top: 116.2, size: 65, rotate: 16 },
-  { src: "/whitesvgs/star13.svg", left: 297.5, top: 22.6, size: 32 },
-  { src: "/whitesvgs/star18.svg", left: 139.9, top: 23.4, size: 32 },
-  { src: "/whitesvgs/star3.svg", left: 106.3, top: 129.0, size: 32 },
-];
+const headerIconsMobile: DecorIcon[] = [];
 
 export function EboardHeaderIcons() {
   return (

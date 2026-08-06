@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { galleryPhotos, practiceTimes } from "@/lib/db/schema";
@@ -44,12 +45,15 @@ export default async function HomePage() {
         <div className="h-screen flex flex-col">
           {/* Nav */}
           <header className="relative z-20 bg-background px-3.5 py-3 flex items-center justify-between border-b border-border">
-            <Link
-              href="/"
-              aria-label="GWCC home"
-              className="flex items-center justify-center w-[22px] h-[22px] rounded-sm border border-dashed border-gwcc-gold/40 text-gwcc-gold/60 text-[6px] uppercase tracking-tight hover:border-gwcc-gold/70 hover:text-gwcc-gold transition-colors"
-            >
-              logo
+            <Link href="/" aria-label="GWCC home" className="flex items-center -my-3 group">
+              <Image
+                src="/gwccgraffiticolor.PNG"
+                alt="GWCC"
+                width={240}
+                height={64}
+                className="h-10 w-auto object-contain transition-transform duration-200 ease-out group-hover:scale-110"
+                priority
+              />
             </Link>
             <NavLinks />
           </header>

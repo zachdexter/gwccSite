@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SiteHeader } from "@/components/SiteHeader";
-import { EboardGrid } from "@/components/EboardGrid";
+import { AlbumGrid } from "@/components/AlbumGrid";
 import {
   Dialog,
   DialogContent,
@@ -11,12 +11,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-type EboardMember = {
+type Album = {
   id: number;
   name: string;
-  role: string;
-  year: string;
-  headshotUrl: string | null;
+  description: string | null;
+  photoCount: number;
+  coverPhotoUrl: string | null;
 };
 
 type Device = "desktop" | "mobile";
@@ -35,8 +35,8 @@ const MOBILE_WIDTH = 343; // ~390px phone viewport minus px-6 padding on each si
 
 let nextId = 0;
 
-export default function ScatterEboardEditor() {
-  const [members, setMembers] = useState<EboardMember[]>([]);
+export default function ScatterGalleryEditor() {
+  const [albums, setAlbums] = useState<Album[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -48,10 +48,10 @@ export default function ScatterEboardEditor() {
   const dragId = useRef<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/eboard")
+    fetch("/api/gallery/albums")
       .then((r) => r.json())
-      .then((data) => setMembers(data ?? []))
-      .catch(() => setMembers([]));
+      .then((data) => setAlbums(data ?? []))
+      .catch(() => setAlbums([]));
   }, []);
 
   useEffect(() => {
@@ -152,7 +152,7 @@ export default function ScatterEboardEditor() {
       <main
         className={
           device === "desktop"
-            ? "px-6 py-16 max-w-5xl mx-auto w-full"
+            ? "px-6 py-16 max-w-6xl mx-auto w-full"
             : "px-6 py-16 mx-auto w-full"
         }
         style={device === "mobile" ? { maxWidth: MOBILE_WIDTH + 48 } : undefined}
@@ -166,14 +166,14 @@ export default function ScatterEboardEditor() {
         >
           <div className="pointer-events-none">
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
-              Eboard
+              Photos
             </div>
             <h1
               className={`font-heading leading-tight text-foreground ${
                 device === "desktop" ? "text-5xl md:text-6xl" : "text-5xl"
               }`}
             >
-              Meet the Eboard
+              Gallery
             </h1>
           </div>
           {visibleItems.map((it) => (
@@ -199,10 +199,15 @@ export default function ScatterEboardEditor() {
         </div>
 
         <div className="pointer-events-none">
-          {members.length === 0 ? (
-            <div className="text-muted-foreground text-center py-20">Loading real eboard data…</div>
+          {albums.length === 0 ? (
+            <div className="text-muted-foreground text-center py-20">Loading real gallery data…</div>
           ) : (
-            <EboardGrid members={members} />
+            <div>
+              <h2 className="font-heading text-muted-foreground text-sm uppercase tracking-widest mb-4">
+                Albums
+              </h2>
+              <AlbumGrid albums={albums} />
+            </div>
           )}
         </div>
       </main>

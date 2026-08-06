@@ -22,7 +22,7 @@ export default async function CompPage() {
         <SiteHeader />
 
         <main className="flex-1 px-6 py-16 max-w-5xl mx-auto w-full">
-          <div id="decor-header-zone" className="relative mb-12">
+          <div id="decor-header-zone" className="relative py-14 mb-12">
             <CompHeaderIcons />
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
               Competitive Team
