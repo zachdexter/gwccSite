@@ -18,18 +18,23 @@ export async function POST(
   const { date } = await req.json();
   if (!date) return NextResponse.json({ error: "date required" }, { status: 400 });
 
-  const allSemesters = await db.select().from(semesters);
-  const semester = allSemesters.find((s) => s.startDate <= date && s.endDate >= date);
-  if (!semester)
-    return NextResponse.json({ error: "No semester covers this date" }, { status: 400 });
+  try {
+    const allSemesters = await db.select().from(semesters);
+    const semester = allSemesters.find((s) => s.startDate <= date && s.endDate >= date);
+    if (!semester)
+      return NextResponse.json({ error: "No semester covers this date" }, { status: 400 });
 
-  const loggedAt = new Date(`${date}T19:00:00.000Z`);
-  const [log] = await db
-    .insert(attendanceLogs)
-    .values({ memberId, semesterId: semester.id, loggedAt, loggedBy: "president" })
-    .returning();
+    const loggedAt = new Date(`${date}T19:00:00.000Z`);
+    const [log] = await db
+      .insert(attendanceLogs)
+      .values({ memberId, semesterId: semester.id, loggedAt, loggedBy: "president" })
+      .returning();
 
-  return NextResponse.json(log, { status: 201 });
+    return NextResponse.json(log, { status: 201 });
+  } catch (err) {
+    console.error("[members/attendance/logs:POST]", err);
+    return NextResponse.json({ error: "Failed to log attendance." }, { status: 500 });
+  }
 }
 
 export async function DELETE(
@@ -45,14 +50,19 @@ export async function DELETE(
   const { logId } = await req.json();
   if (!logId) return NextResponse.json({ error: "logId required" }, { status: 400 });
 
-  const [log] = await db
-    .select()
-    .from(attendanceLogs)
-    .where(eq(attendanceLogs.id, logId));
+  try {
+    const [log] = await db
+      .select()
+      .from(attendanceLogs)
+      .where(eq(attendanceLogs.id, logId));
 
-  if (!log || log.memberId !== memberId)
-    return NextResponse.json({ error: "Log not found for this member" }, { status: 400 });
+    if (!log || log.memberId !== memberId)
+      return NextResponse.json({ error: "Log not found for this member" }, { status: 400 });
 
-  await db.delete(attendanceLogs).where(eq(attendanceLogs.id, logId));
-  return NextResponse.json({ ok: true });
+    await db.delete(attendanceLogs).where(eq(attendanceLogs.id, logId));
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[members/attendance/logs:DELETE]", err);
+    return NextResponse.json({ error: "Failed to remove attendance log." }, { status: 500 });
+  }
 }

@@ -33,13 +33,14 @@ export default function PracticeTimesPage() {
   const [saving, setSaving] = useState(false);
   const { confirm, ConfirmDialog } = useConfirm();
 
-  async function fetchTimes() {
-    const res = await fetch("/api/practice-times");
-    if (res.ok) setTimes(await res.json());
-    setLoading(false);
-  }
-
-  useEffect(() => { fetchTimes(); }, []);
+  useEffect(() => {
+    async function fetchTimes() {
+      const res = await fetch("/api/practice-times");
+      if (res.ok) setTimes(await res.json());
+      setLoading(false);
+    }
+    fetchTimes();
+  }, []);
 
   function resetForm() {
     setForm({ day: "Monday", startTime: "19:00", endTime: "21:00" });

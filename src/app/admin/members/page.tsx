@@ -34,26 +34,29 @@ export default function MembersPage() {
   const [query, setQuery] = useState("");
   const { confirm, ConfirmDialog } = useConfirm();
 
-  async function fetchMembers() {
-    const res = await fetch("/api/members");
-    if (res.ok) setMembers(await res.json());
-    setLoading(false);
-  }
+  useEffect(() => {
+    async function fetchMembers() {
+      const res = await fetch("/api/members");
+      if (res.ok) setMembers(await res.json());
+      setLoading(false);
+    }
 
-  async function fetchMissStats() {
-    const attRes = await fetch("/api/attendance");
-    if (!attRes.ok) return;
-    const { semester } = await attRes.json();
-    if (!semester) return;
-    const summaryRes = await fetch(`/api/attendance/summary?semesterId=${semester.id}`);
-    if (!summaryRes.ok) return;
-    const { members: summaryMembers } = await summaryRes.json();
-    const map = new Map<number, MissStat>();
-    for (const m of summaryMembers) map.set(m.id, { missedOneDayCount: m.missedOneDayCount, missedBothDaysCount: m.missedBothDaysCount });
-    setMissStats(map);
-  }
+    async function fetchMissStats() {
+      const attRes = await fetch("/api/attendance");
+      if (!attRes.ok) return;
+      const { semester } = await attRes.json();
+      if (!semester) return;
+      const summaryRes = await fetch(`/api/attendance/summary?semesterId=${semester.id}`);
+      if (!summaryRes.ok) return;
+      const { members: summaryMembers } = await summaryRes.json();
+      const map = new Map<number, MissStat>();
+      for (const m of summaryMembers) map.set(m.id, { missedOneDayCount: m.missedOneDayCount, missedBothDaysCount: m.missedBothDaysCount });
+      setMissStats(map);
+    }
 
-  useEffect(() => { fetchMembers(); fetchMissStats(); }, []);
+    fetchMembers();
+    fetchMissStats();
+  }, []);
 
   async function addMember(e: React.FormEvent) {
     e.preventDefault();

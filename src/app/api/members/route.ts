@@ -9,8 +9,13 @@ export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const all = await db.select().from(members).orderBy(members.name);
-  return NextResponse.json(all);
+  try {
+    const all = await db.select().from(members).orderBy(members.name);
+    return NextResponse.json(all);
+  } catch (err) {
+    console.error("[members:GET]", err);
+    return NextResponse.json({ error: "Failed to load members." }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -20,18 +25,23 @@ export async function POST(req: Request) {
   const { name, email, isSubsidized } = await req.json();
   if (!name) return NextResponse.json({ error: "Name required" }, { status: 400 });
 
-  const [member] = await db
-    .insert(members)
-    .values({ name, email: email || null, isSubsidized: Boolean(isSubsidized) })
-    .returning();
+  try {
+    const [member] = await db
+      .insert(members)
+      .values({ name, email: email || null, isSubsidized: Boolean(isSubsidized) })
+      .returning();
 
-  await db.insert(subsidyChanges).values({
-    memberId: member.id,
-    isSubsidized: member.isSubsidized,
-    changedAt: member.createdAt,
-  });
+    await db.insert(subsidyChanges).values({
+      memberId: member.id,
+      isSubsidized: member.isSubsidized,
+      changedAt: member.createdAt,
+    });
 
-  return NextResponse.json(member, { status: 201 });
+    return NextResponse.json(member, { status: 201 });
+  } catch (err) {
+    console.error("[members:POST]", err);
+    return NextResponse.json({ error: "Failed to create member." }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: Request) {
@@ -44,20 +54,25 @@ export async function PATCH(req: Request) {
 
   const updates = pick(body, ["name", "email", "isSubsidized", "isActive", "notes"]);
 
-  const [updated] = await db
-    .update(members)
-    .set(updates)
-    .where(eq(members.id, id))
-    .returning();
+  try {
+    const [updated] = await db
+      .update(members)
+      .set(updates)
+      .where(eq(members.id, id))
+      .returning();
 
-  if ("isSubsidized" in updates) {
-    await db.insert(subsidyChanges).values({
-      memberId: id,
-      isSubsidized: updated.isSubsidized,
-    });
+    if ("isSubsidized" in updates) {
+      await db.insert(subsidyChanges).values({
+        memberId: id,
+        isSubsidized: updated.isSubsidized,
+      });
+    }
+
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error("[members:PATCH]", err);
+    return NextResponse.json({ error: "Failed to update member." }, { status: 500 });
   }
-
-  return NextResponse.json(updated);
 }
 
 export async function DELETE(req: Request) {
@@ -65,6 +80,12 @@ export async function DELETE(req: Request) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await req.json();
-  await db.update(members).set({ isActive: false }).where(eq(members.id, id));
-  return NextResponse.json({ ok: true });
+
+  try {
+    await db.update(members).set({ isActive: false }).where(eq(members.id, id));
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[members:DELETE]", err);
+    return NextResponse.json({ error: "Failed to remove member." }, { status: 500 });
+  }
 }

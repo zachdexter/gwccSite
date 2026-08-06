@@ -8,22 +8,27 @@ export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const activeSemester = await db
-    .select()
-    .from(semesters)
-    .where(eq(semesters.isActive, true))
-    .limit(1);
+  try {
+    const activeSemester = await db
+      .select()
+      .from(semesters)
+      .where(eq(semesters.isActive, true))
+      .limit(1);
 
-  if (!activeSemester[0]) {
-    return NextResponse.json({ error: "No active semester" }, { status: 404 });
+    if (!activeSemester[0]) {
+      return NextResponse.json({ error: "No active semester" }, { status: 404 });
+    }
+
+    const logs = await db
+      .select()
+      .from(attendanceLogs)
+      .where(eq(attendanceLogs.semesterId, activeSemester[0].id));
+
+    return NextResponse.json({ semester: activeSemester[0], logs });
+  } catch (err) {
+    console.error("[attendance:GET]", err);
+    return NextResponse.json({ error: "Failed to load attendance." }, { status: 500 });
   }
-
-  const logs = await db
-    .select()
-    .from(attendanceLogs)
-    .where(eq(attendanceLogs.semesterId, activeSemester[0].id));
-
-  return NextResponse.json({ semester: activeSemester[0], logs });
 }
 
 export async function POST(req: Request) {
@@ -33,43 +38,48 @@ export async function POST(req: Request) {
   const { memberId } = await req.json();
   if (!memberId) return NextResponse.json({ error: "memberId required" }, { status: 400 });
 
-  const activeSemester = await db
-    .select()
-    .from(semesters)
-    .where(eq(semesters.isActive, true))
-    .limit(1);
+  try {
+    const activeSemester = await db
+      .select()
+      .from(semesters)
+      .where(eq(semesters.isActive, true))
+      .limit(1);
 
-  if (!activeSemester[0]) {
-    return NextResponse.json({ error: "No active semester" }, { status: 400 });
-  }
+    if (!activeSemester[0]) {
+      return NextResponse.json({ error: "No active semester" }, { status: 400 });
+    }
 
-  const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-  const recentCheck = await db
-    .select()
-    .from(attendanceLogs)
-    .where(
-      and(
-        eq(attendanceLogs.memberId, memberId),
-        eq(attendanceLogs.semesterId, activeSemester[0].id)
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const recentCheck = await db
+      .select()
+      .from(attendanceLogs)
+      .where(
+        and(
+          eq(attendanceLogs.memberId, memberId),
+          eq(attendanceLogs.semesterId, activeSemester[0].id)
+        )
       )
-    )
-    .orderBy(desc(attendanceLogs.loggedAt))
-    .limit(1);
+      .orderBy(desc(attendanceLogs.loggedAt))
+      .limit(1);
 
-  if (recentCheck[0] && recentCheck[0].loggedAt > twoHoursAgo) {
-    return NextResponse.json({ error: "cooldown" }, { status: 409 });
+    if (recentCheck[0] && recentCheck[0].loggedAt > twoHoursAgo) {
+      return NextResponse.json({ error: "cooldown" }, { status: 409 });
+    }
+
+    const [log] = await db
+      .insert(attendanceLogs)
+      .values({
+        memberId,
+        semesterId: activeSemester[0].id,
+        loggedBy: session.user.role,
+      })
+      .returning();
+
+    return NextResponse.json(log, { status: 201 });
+  } catch (err) {
+    console.error("[attendance:POST]", err);
+    return NextResponse.json({ error: "Failed to log attendance." }, { status: 500 });
   }
-
-  const [log] = await db
-    .insert(attendanceLogs)
-    .values({
-      memberId,
-      semesterId: activeSemester[0].id,
-      loggedBy: session.user.role,
-    })
-    .returning();
-
-  return NextResponse.json(log, { status: 201 });
 }
 
 export async function DELETE(req: Request) {
@@ -78,35 +88,40 @@ export async function DELETE(req: Request) {
 
   const { memberId } = await req.json();
 
-  const activeSemester = await db
-    .select()
-    .from(semesters)
-    .where(eq(semesters.isActive, true))
-    .limit(1);
+  try {
+    const activeSemester = await db
+      .select()
+      .from(semesters)
+      .where(eq(semesters.isActive, true))
+      .limit(1);
 
-  if (!activeSemester[0]) {
-    return NextResponse.json({ error: "No active semester" }, { status: 400 });
-  }
+    if (!activeSemester[0]) {
+      return NextResponse.json({ error: "No active semester" }, { status: 400 });
+    }
 
-  const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
-  const recent = await db
-    .select()
-    .from(attendanceLogs)
-    .where(
-      and(
-        eq(attendanceLogs.memberId, memberId),
-        eq(attendanceLogs.semesterId, activeSemester[0].id)
+    const recent = await db
+      .select()
+      .from(attendanceLogs)
+      .where(
+        and(
+          eq(attendanceLogs.memberId, memberId),
+          eq(attendanceLogs.semesterId, activeSemester[0].id)
+        )
       )
-    )
-    .orderBy(desc(attendanceLogs.loggedAt))
-    .limit(1);
+      .orderBy(desc(attendanceLogs.loggedAt))
+      .limit(1);
 
-  if (!recent[0] || recent[0].loggedAt < fiveMinutesAgo) {
-    return NextResponse.json({ error: "No recent log to undo" }, { status: 400 });
+    if (!recent[0] || recent[0].loggedAt < fiveMinutesAgo) {
+      return NextResponse.json({ error: "No recent log to undo" }, { status: 400 });
+    }
+
+    await db.delete(attendanceLogs).where(eq(attendanceLogs.id, recent[0].id));
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[attendance:DELETE]", err);
+    return NextResponse.json({ error: "Failed to undo attendance." }, { status: 500 });
   }
-
-  await db.delete(attendanceLogs).where(eq(attendanceLogs.id, recent[0].id));
-
-  return NextResponse.json({ ok: true });
 }

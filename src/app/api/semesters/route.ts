@@ -8,8 +8,13 @@ export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const all = await db.select().from(semesters).orderBy(semesters.createdAt);
-  return NextResponse.json(all);
+  try {
+    const all = await db.select().from(semesters).orderBy(semesters.createdAt);
+    return NextResponse.json(all);
+  } catch (err) {
+    console.error("[semesters:GET]", err);
+    return NextResponse.json({ error: "Failed to load semesters." }, { status: 500 });
+  }
 }
 
 export async function POST(req: Request) {
@@ -21,12 +26,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "name, startDate, endDate required" }, { status: 400 });
   }
 
-  const [semester] = await db
-    .insert(semesters)
-    .values({ name, startDate, endDate })
-    .returning();
+  try {
+    const [semester] = await db
+      .insert(semesters)
+      .values({ name, startDate, endDate })
+      .returning();
 
-  return NextResponse.json(semester, { status: 201 });
+    return NextResponse.json(semester, { status: 201 });
+  } catch (err) {
+    console.error("[semesters:POST]", err);
+    return NextResponse.json({ error: "Failed to create semester." }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: Request) {
@@ -36,20 +46,25 @@ export async function PATCH(req: Request) {
   const { id, activate, ...updates } = await req.json();
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
-  if (activate) {
-    // Single atomic statement: every row's isActive is set based on whether
-    // it matches `id`, so there's no window where zero or two semesters are active.
-    await db.update(semesters).set({ isActive: sql`${semesters.id} = ${id}` });
-    return NextResponse.json({ ok: true });
+  try {
+    if (activate) {
+      // Single atomic statement: every row's isActive is set based on whether
+      // it matches `id`, so there's no window where zero or two semesters are active.
+      await db.update(semesters).set({ isActive: sql`${semesters.id} = ${id}` });
+      return NextResponse.json({ ok: true });
+    }
+
+    const [updated] = await db
+      .update(semesters)
+      .set(updates)
+      .where(eq(semesters.id, id))
+      .returning();
+
+    return NextResponse.json(updated);
+  } catch (err) {
+    console.error("[semesters:PATCH]", err);
+    return NextResponse.json({ error: "Failed to update semester." }, { status: 500 });
   }
-
-  const [updated] = await db
-    .update(semesters)
-    .set(updates)
-    .where(eq(semesters.id, id))
-    .returning();
-
-  return NextResponse.json(updated);
 }
 
 export async function DELETE(req: Request) {
@@ -59,6 +74,12 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id } = await req.json();
-  await db.delete(semesters).where(eq(semesters.id, id));
-  return NextResponse.json({ ok: true });
+
+  try {
+    await db.delete(semesters).where(eq(semesters.id, id));
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[semesters:DELETE]", err);
+    return NextResponse.json({ error: "Failed to delete semester." }, { status: 500 });
+  }
 }

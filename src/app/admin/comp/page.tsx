@@ -37,13 +37,14 @@ export default function CompAdminPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const { confirm, ConfirmDialog } = useConfirm();
 
-  async function fetchMembers() {
-    const res = await fetch("/api/comp");
-    if (res.ok) setMembers(await res.json());
-    setLoading(false);
-  }
-
-  useEffect(() => { fetchMembers(); }, []);
+  useEffect(() => {
+    async function fetchMembers() {
+      const res = await fetch("/api/comp");
+      if (res.ok) setMembers(await res.json());
+      setLoading(false);
+    }
+    fetchMembers();
+  }, []);
 
   function resetForm() {
     setForm({ name: "", year: "Fr", bio: "" });

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/SiteHeader";
 import { EboardGrid } from "@/components/EboardGrid";
 import {
@@ -35,6 +36,8 @@ const CANVAS_WIDTH = 343; // ~390px phone viewport minus px-6 padding on each si
 let nextId = 0;
 
 export default function ScatterEboardEditor() {
+  if (process.env.NODE_ENV === "production") notFound();
+
   const [members, setMembers] = useState<EboardMember[]>([]);
   const [items, setItems] = useState<Item[]>([]);
   const [selected, setSelected] = useState<string | null>(null);

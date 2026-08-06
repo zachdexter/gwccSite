@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { notFound } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,8 @@ const drawerLinks = ["Competitive Team", "Eboard", "Gallery", "Get Involved"];
 let nextId = 0;
 
 export default function ScatterMenuEditor() {
+  if (process.env.NODE_ENV === "production") notFound();
+
   const [items, setItems] = useState<Item[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);

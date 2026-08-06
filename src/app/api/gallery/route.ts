@@ -11,22 +11,25 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const albumIdParam = searchParams.get("albumId");
 
-  const query = db.select().from(galleryPhotos).orderBy(desc(galleryPhotos.uploadedAt));
-
-  if (albumIdParam) {
-    const albumId = parseInt(albumIdParam);
-    if (!isNaN(albumId)) {
-      const photos = await db
-        .select()
-        .from(galleryPhotos)
-        .where(eq(galleryPhotos.albumId, albumId))
-        .orderBy(desc(galleryPhotos.uploadedAt));
-      return NextResponse.json(photos);
+  try {
+    if (albumIdParam) {
+      const albumId = parseInt(albumIdParam);
+      if (!isNaN(albumId)) {
+        const photos = await db
+          .select()
+          .from(galleryPhotos)
+          .where(eq(galleryPhotos.albumId, albumId))
+          .orderBy(desc(galleryPhotos.uploadedAt));
+        return NextResponse.json(photos);
+      }
     }
-  }
 
-  const photos = await query;
-  return NextResponse.json(photos);
+    const photos = await db.select().from(galleryPhotos).orderBy(desc(galleryPhotos.uploadedAt));
+    return NextResponse.json(photos);
+  } catch (err) {
+    console.error("[gallery:GET]", err);
+    return NextResponse.json({ error: "Failed to load photos." }, { status: 500 });
+  }
 }
 
 export async function PATCH(req: Request) {
@@ -39,21 +42,26 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "isShowcase required" }, { status: 400 });
   }
 
-  const [target] = await db.select().from(galleryPhotos).where(eq(galleryPhotos.id, id));
-  if (!target) return NextResponse.json({ error: "Photo not found" }, { status: 404 });
+  try {
+    const [target] = await db.select().from(galleryPhotos).where(eq(galleryPhotos.id, id));
+    if (!target) return NextResponse.json({ error: "Photo not found" }, { status: 404 });
 
-  if (isShowcase && target.albumId !== null) {
-    await db
+    if (isShowcase && target.albumId !== null) {
+      await db
+        .update(galleryPhotos)
+        .set({ isShowcase: false })
+        .where(and(eq(galleryPhotos.albumId, target.albumId), eq(galleryPhotos.isShowcase, true)));
+    }
+
+    const [photo] = await db
       .update(galleryPhotos)
-      .set({ isShowcase: false })
-      .where(and(eq(galleryPhotos.albumId, target.albumId), eq(galleryPhotos.isShowcase, true)));
+      .set({ isShowcase })
+      .where(eq(galleryPhotos.id, id))
+      .returning();
+
+    return NextResponse.json(photo);
+  } catch (err) {
+    console.error("[gallery:PATCH]", err);
+    return NextResponse.json({ error: "Failed to update photo." }, { status: 500 });
   }
-
-  const [photo] = await db
-    .update(galleryPhotos)
-    .set({ isShowcase })
-    .where(eq(galleryPhotos.id, id))
-    .returning();
-
-  return NextResponse.json(photo);
 }

@@ -24,26 +24,31 @@ export async function POST(req: Request) {
     );
   }
 
-  if (role === "president") {
-    if (!currentPassword) {
-      return NextResponse.json({ error: "currentPassword required" }, { status: 400 });
-    }
-    const [account] = await db
-      .select()
-      .from(accounts)
-      .where(eq(accounts.role, "president"));
+  try {
+    if (role === "president") {
+      if (!currentPassword) {
+        return NextResponse.json({ error: "currentPassword required" }, { status: 400 });
+      }
+      const [account] = await db
+        .select()
+        .from(accounts)
+        .where(eq(accounts.role, "president"));
 
-    const valid = await bcrypt.compare(currentPassword, account.passwordHash);
-    if (!valid) {
-      return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
+      const valid = await bcrypt.compare(currentPassword, account.passwordHash);
+      if (!valid) {
+        return NextResponse.json({ error: "Current password is incorrect" }, { status: 400 });
+      }
     }
+
+    const hash = await bcrypt.hash(newPassword, 12);
+    await db
+      .update(accounts)
+      .set({ passwordHash: hash, updatedAt: new Date() })
+      .where(eq(accounts.role, role as "president" | "eboard"));
+
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[settings:POST]", err);
+    return NextResponse.json({ error: "Failed to update password." }, { status: 500 });
   }
-
-  const hash = await bcrypt.hash(newPassword, 12);
-  await db
-    .update(accounts)
-    .set({ passwordHash: hash, updatedAt: new Date() })
-    .where(eq(accounts.role, role as "president" | "eboard"));
-
-  return NextResponse.json({ ok: true });
 }

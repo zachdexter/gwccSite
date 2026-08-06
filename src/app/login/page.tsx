@@ -49,7 +49,10 @@ export default function LoginPage() {
   // cropped background), same as a bigger monitor simply seeing more of it.
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
   useEffect(() => {
-    setCanvasSize({ width: window.innerWidth, height: window.innerHeight });
+    function readSize() {
+      setCanvasSize({ width: window.innerWidth, height: window.innerHeight });
+    }
+    readSize();
   }, []);
 
   async function handleSubmit(e: React.FormEvent) {

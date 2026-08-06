@@ -41,12 +41,13 @@ export default function SemestersPage() {
   const role = useAdminRole();
   const { confirm, ConfirmDialog } = useConfirm();
 
-  async function fetchSemesters() {
-    const res = await fetch("/api/semesters");
-    if (res.ok) setSemesters(await res.json());
-  }
-
-  useEffect(() => { fetchSemesters(); }, []);
+  useEffect(() => {
+    async function fetchSemesters() {
+      const res = await fetch("/api/semesters");
+      if (res.ok) setSemesters(await res.json());
+    }
+    fetchSemesters();
+  }, []);
 
   async function addSemester(e: React.FormEvent) {
     e.preventDefault();

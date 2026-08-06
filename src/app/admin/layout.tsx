@@ -41,7 +41,7 @@ export default async function AdminLayout({
         <div className="fixed bottom-2 right-3 z-10 text-[11px] text-muted-foreground/50 hover:text-muted-foreground transition-colors">
           Something broken, or a question about how this site works?{" "}
           <a href="mailto:zsdexter05@gmail.com" className="underline underline-offset-2">
-            Email Zach Dexter ('26-'27 VP)
+            Email Zach Dexter (&apos;26-&apos;27 VP)
           </a>
         </div>
       </div>

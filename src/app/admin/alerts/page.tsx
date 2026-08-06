@@ -30,13 +30,14 @@ export default function AlertsPage() {
   const [saving, setSaving] = useState(false);
   const { confirm, ConfirmDialog } = useConfirm();
 
-  async function fetchAlerts() {
-    const res = await fetch("/api/alerts");
-    if (res.ok) setItems(await res.json());
-    setLoading(false);
-  }
-
-  useEffect(() => { fetchAlerts(); }, []);
+  useEffect(() => {
+    async function fetchAlerts() {
+      const res = await fetch("/api/alerts");
+      if (res.ok) setItems(await res.json());
+      setLoading(false);
+    }
+    fetchAlerts();
+  }, []);
 
   function resetForm() {
     setMessage("");

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { notFound } from "next/navigation";
 
 type Item = {
   id: string;
@@ -32,6 +33,8 @@ const initialItems: Item[] = [
 let nextId = 0;
 
 export default function ScatterEditor() {
+  if (process.env.NODE_ENV === "production") notFound();
+
   const [items, setItems] = useState<Item[]>(initialItems);
   const [selected, setSelected] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);

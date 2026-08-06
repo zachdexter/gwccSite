@@ -19,13 +19,16 @@ export function ImageCropDialog({ file, open, onOpenChange, onCropped }: ImageCr
   const cropperRef = useRef<ReactCropperElement>(null);
 
   useEffect(() => {
-    if (!file) {
-      setImageSrc(null);
-      return;
+    function sync() {
+      if (!file) {
+        setImageSrc(null);
+        return undefined;
+      }
+      const url = URL.createObjectURL(file);
+      setImageSrc(url);
+      return () => URL.revokeObjectURL(url);
     }
-    const url = URL.createObjectURL(file);
-    setImageSrc(url);
-    return () => URL.revokeObjectURL(url);
+    return sync();
   }, [file]);
 
   function handleSave() {

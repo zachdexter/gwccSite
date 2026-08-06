@@ -5,6 +5,10 @@ import path from "path";
 const FOLDERS = ["navysvgs", "whitesvgs"] as const;
 
 export async function GET(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
   const { searchParams } = new URL(request.url);
   const requested = searchParams.get("dir") ?? "navysvgs";
   const folder = FOLDERS.includes(requested as (typeof FOLDERS)[number]) ? requested : "navysvgs";

@@ -14,6 +14,11 @@ export async function GET(req: Request) {
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  await db.delete(alerts).where(lt(alerts.expiresAt, new Date()));
-  return NextResponse.json({ ok: true });
+  try {
+    await db.delete(alerts).where(lt(alerts.expiresAt, new Date()));
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    console.error("[alerts/cleanup:GET]", err);
+    return NextResponse.json({ error: "Failed to clean up alerts." }, { status: 500 });
+  }
 }
