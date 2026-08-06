@@ -1,45 +1,26 @@
-type DecorIcon = {
-  src: string;
-  left: number;
-  top: number;
-  size: number;
-  rotate?: number;
-};
+import { HeaderIconCluster } from "@/components/HeaderIconCluster";
+import type { DecorIcon } from "@/lib/decorBounds";
 
-// Fixed pixel offsets from the drawer's top-left corner (authored at a ~320px-wide
-// mobile drawer canvas in /dev/scatter-menu). Paste that page's "Copy code" output here.
+// Fixed pixel offsets from the drawer's top-left corner (authored at a ~320px-wide mobile
+// drawer canvas in /dev/scatter-menu). The menu's content (links, padding) sits at fixed
+// pixel offsets from the top regardless of device height — the drawer itself is h-full, so
+// its height varies a lot by device — so these must stay fixed px, not percentages, or
+// icons meant to hug the text drift onto it on taller/shorter screens. HeaderIconCluster's
+// clamp() still keeps them from spilling past the actual live edge. Paste output from
+// /dev/scatter-menu here.
 const menuIcons: DecorIcon[] = [
-  { src: "/navysvgs/star18.svg", left: 118.0, top: 129.0, size: 32 },
-  { src: "/navysvgs/star16.svg", left: 170.8, top: 250.6, size: 32 },
-  { src: "/navysvgs/star14.svg", left: 226.8, top: 68.2, size: 32 },
-  { src: "/navysvgs/star7.svg", left: 122.0, top: 193.0, size: 32 },
-  { src: "/whitesvgs/star3.svg", left: 237.2, top: 366.6, size: 32 },
-  { src: "/whitesvgs/star9.svg", left: 162.8, top: 516.2, size: 32 },
-  { src: "/whitesvgs/star11.svg", left: 51.6, top: 373.0, size: 32 },
-  { src: "/whitesvgs/carabiner.svg", left: 56.4, top: 610.6, size: 32, rotate: 53 },
-  { src: "/whitesvgs/hold10.svg", left: 161.2, top: 337.0, size: 32, rotate: 1 },
-  { src: "/whitesvgs/hold12.svg", left: 111.6, top: 437.8, size: 32, rotate: 78 },
-  { src: "/whitesvgs/hold9.svg", left: 244.4, top: 608.2, size: 32, rotate: -20 },
+  { src: "/navysvgs/star1.svg", left: 166.7, top: 247.1, size: 32 },
+  { src: "/navysvgs/star18.svg", left: 121.9, top: 189.0, size: 32 },
+  { src: "/navysvgs/star5.svg", left: 117.1, top: 132.3, size: 32 },
+  { src: "/navysvgs/star20.svg", left: 220.5, top: 70.0, size: 32 },
+  { src: "/navysvgs/hold6.svg", left: 246.1, top: 322.0, size: 32, rotate: -37 },
+  { src: "/navysvgs/star13.svg", left: 243.5, top: 634.9, size: 32 },
+  { src: "/whitesvgs/star18.svg", left: 108.5, top: 487.9, size: 32 },
+  { src: "/whitesvgs/hold8.svg", left: 219.5, top: 452.9, size: 32 },
+  { src: "/whitesvgs/hold1.svg", left: 36.5, top: 644.7, size: 32 },
+  { src: "/whitesvgs/chalkbag.svg", left: 63.7, top: 374.5, size: 44 },
 ];
 
 export function MenuDecorIcons() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {menuIcons.map((icon, i) => (
-        <img
-          key={`${icon.src}-${i}`}
-          src={icon.src}
-          alt=""
-          className="pointer-events-none select-none absolute"
-          style={{
-            left: icon.left,
-            top: icon.top,
-            width: icon.size,
-            height: icon.size,
-            transform: `translate(-50%, -50%) rotate(${icon.rotate ?? 0}deg)`,
-          }}
-        />
-      ))}
-    </div>
-  );
+  return <HeaderIconCluster icons={menuIcons} />;
 }

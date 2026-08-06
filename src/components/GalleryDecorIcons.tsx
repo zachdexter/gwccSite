@@ -1,4 +1,5 @@
 import { PageIconFill } from "@/components/PageIconFill";
+import { HeaderIconCluster } from "@/components/HeaderIconCluster";
 import { SIDE_ICON_POOL } from "@/lib/decorIconPool";
 import { computeClusterBounds, type DecorIcon } from "@/lib/decorBounds";
 
@@ -18,25 +19,7 @@ const headerIcons: DecorIcon[] = [
 const clusterBounds = computeClusterBounds(headerIcons);
 
 export function GalleryHeaderIcons() {
-  return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden">
-      {headerIcons.map((icon, i) => (
-        <img
-          key={`${icon.src}-${i}`}
-          src={icon.src}
-          alt=""
-          className="pointer-events-none select-none absolute"
-          style={{
-            left: icon.left,
-            top: icon.top,
-            width: icon.size,
-            height: icon.size,
-            transform: `translate(-50%, -50%) rotate(${icon.rotate ?? 0}deg)`,
-          }}
-        />
-      ))}
-    </div>
-  );
+  return <HeaderIconCluster icons={headerIcons} />;
 }
 
 // Fills whatever blank page space is left — around the header on narrow/landscape/tablet
