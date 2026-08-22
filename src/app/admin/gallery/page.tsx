@@ -184,8 +184,9 @@ export default function GalleryAdminPage() {
       </div>
 
       <p className="text-muted-foreground text-sm">
-        Albums and photos are synced from Google Drive. Open an album to choose its cover photo.
-        To choose which photos appear in the homepage hero carousel, use{" "}
+        Albums and photos are synced from Google Drive automatically once a day, or click
+        &quot;Sync from Drive&quot; to pull in changes immediately. Open an album to choose its
+        cover photo. To choose which photos appear in the homepage hero carousel, use{" "}
         <Link href="/admin/gallery/hero" className="text-gwcc-gold hover:underline">
           Manage Hero Carousel
         </Link>

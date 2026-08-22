@@ -42,6 +42,8 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (session.user.role !== "president")
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const { id, activate, ...updates } = await req.json();
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });

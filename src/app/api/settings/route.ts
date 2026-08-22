@@ -7,14 +7,22 @@ import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
   const session = await auth();
-  if (!session || session.user.role !== "president") {
+  if (!session) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const { role, currentPassword, newPassword } = await req.json();
 
-  if (!role || !newPassword) {
-    return NextResponse.json({ error: "role and newPassword required" }, { status: 400 });
+  if (role !== "president" && role !== "eboard") {
+    return NextResponse.json({ error: "role must be 'president' or 'eboard'" }, { status: 400 });
+  }
+
+  if (!newPassword) {
+    return NextResponse.json({ error: "newPassword required" }, { status: 400 });
+  }
+
+  if (session.user.role !== "president" && !(session.user.role === "eboard" && role === "eboard")) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   if (typeof newPassword !== "string" || newPassword.length < 8) {
@@ -25,14 +33,14 @@ export async function POST(req: Request) {
   }
 
   try {
-    if (role === "president") {
+    if (session.user.role !== "president") {
       if (!currentPassword) {
         return NextResponse.json({ error: "currentPassword required" }, { status: 400 });
       }
       const [account] = await db
         .select()
         .from(accounts)
-        .where(eq(accounts.role, "president"));
+        .where(eq(accounts.role, role as "president" | "eboard"));
 
       const valid = await bcrypt.compare(currentPassword, account.passwordHash);
       if (!valid) {
