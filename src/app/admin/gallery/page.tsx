@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -89,7 +90,7 @@ export default function GalleryAdminPage() {
           return isShowcase && p.isShowcase ? { ...p, isShowcase: false } : p;
         })
       );
-      toast.success(isShowcase ? "Set as cover & hero photo" : "Removed as cover & hero photo");
+      toast.success(isShowcase ? "Set as album cover" : "Removed as album cover");
     } else {
       toast.error("Failed to update cover photo");
     }
@@ -115,8 +116,7 @@ export default function GalleryAdminPage() {
         </div>
 
         <p className="text-muted-foreground text-sm">
-          Photos are managed from Google Drive. Pick one photo to use as this album&apos;s cover
-          and include it in the homepage carousel.
+          Photos are managed from Google Drive. Pick one photo to use as this album&apos;s cover.
         </p>
 
         {photos.length === 0 ? (
@@ -141,12 +141,12 @@ export default function GalleryAdminPage() {
                 />
                 {photo.isShowcase && (
                   <div className="absolute top-1.5 left-1.5 bg-gwcc-gold text-gwcc-dark text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded">
-                    Cover & Hero
+                    Cover
                   </div>
                 )}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="text-gwcc-gold text-sm font-medium">
-                    {photo.isShowcase ? "Unset" : "Set as Cover & Hero"}
+                    {photo.isShowcase ? "Unset" : "Set as Cover"}
                   </span>
                 </div>
               </button>
@@ -164,19 +164,32 @@ export default function GalleryAdminPage() {
           <h1 className="text-xl font-bold text-foreground">Gallery</h1>
           <p className="text-muted-foreground text-sm mt-0.5">{albums.length} albums</p>
         </div>
-        <Button
-          onClick={syncFromDrive}
-          disabled={syncing}
-          variant="outline"
-          className="border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
-        >
-          {syncing ? "Syncing…" : "Sync from Drive"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            className="border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+            render={<Link href="/admin/gallery/hero" />}
+          >
+            Manage Hero Carousel
+          </Button>
+          <Button
+            onClick={syncFromDrive}
+            disabled={syncing}
+            variant="outline"
+            className="border-border text-muted-foreground hover:border-foreground/40 hover:text-foreground"
+          >
+            {syncing ? "Syncing…" : "Sync from Drive"}
+          </Button>
+        </div>
       </div>
 
       <p className="text-muted-foreground text-sm">
-        Albums and photos are synced from Google Drive. Open an album to choose its cover photo,
-        which also appears in the homepage carousel.
+        Albums and photos are synced from Google Drive. Open an album to choose its cover photo.
+        To choose which photos appear in the homepage hero carousel, use{" "}
+        <Link href="/admin/gallery/hero" className="text-gwcc-gold hover:underline">
+          Manage Hero Carousel
+        </Link>
+        .
       </p>
 
       {loading ? (

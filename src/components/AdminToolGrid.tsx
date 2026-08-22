@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, Clock, Star, Megaphone } from "lucide-react";
+import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, Clock, Star, Megaphone, LogOut } from "lucide-react";
 import { useAdminRole } from "@/components/AdminRoleContext";
+import { signOut } from "next-auth/react";
 
 const tools = [
   {
@@ -71,21 +72,35 @@ export default function AdminToolGrid({ onNavigate }: AdminToolGridProps) {
   const visibleTools = role === "president" ? [...tools, settingsTool] : tools;
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {visibleTools.map(({ href, label, description, icon: Icon }) => (
-        <Link
-          key={href}
-          href={href}
-          onClick={onNavigate}
-          className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card hover:bg-muted hover:border-gwcc-gold/30 p-6 text-center transition-colors group"
-        >
-          <Icon className="w-8 h-8 text-gwcc-gold/80 group-hover:text-gwcc-gold transition-colors" />
-          <div>
-            <p className="text-card-foreground font-semibold text-sm">{label}</p>
-            <p className="text-muted-foreground text-xs mt-0.5">{description}</p>
-          </div>
-        </Link>
-      ))}
+    <div className="space-y-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {visibleTools.map(({ href, label, description, icon: Icon }) => (
+          <Link
+            key={href}
+            href={href}
+            onClick={onNavigate}
+            className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-card hover:bg-muted hover:border-gwcc-gold/30 p-6 text-center transition-colors group"
+          >
+            <Icon className="w-8 h-8 text-gwcc-gold/80 group-hover:text-gwcc-gold transition-colors" />
+            <div>
+              <p className="text-card-foreground font-semibold text-sm">{label}</p>
+              <p className="text-muted-foreground text-xs mt-0.5">{description}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
+
+      <button
+        type="button"
+        onClick={() => {
+          onNavigate?.();
+          signOut({ callbackUrl: "/" });
+        }}
+        className="flex items-center justify-center gap-2 w-full rounded-xl border border-border bg-card hover:bg-muted hover:border-destructive/30 p-3 text-sm font-medium text-muted-foreground hover:text-destructive transition-colors"
+      >
+        <LogOut className="w-4 h-4" />
+        Sign Out
+      </button>
     </div>
   );
 }

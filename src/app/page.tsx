@@ -27,8 +27,8 @@ export default async function HomePage() {
   const photos = await db
     .select()
     .from(galleryPhotos)
-    .where(eq(galleryPhotos.isShowcase, true))
-    .orderBy(asc(galleryPhotos.uploadedAt));
+    .where(eq(galleryPhotos.showInHero, true))
+    .orderBy(asc(galleryPhotos.heroDisplayOrder));
 
   const schedule = sortPracticeTimes(await db.select().from(practiceTimes));
 
