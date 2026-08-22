@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, Users, CalendarDays, Images, Trophy, Settings, Clock, Star, Megaphone, LogOut } from "lucide-react";
+import { ClipboardCheck, Users, Images, Trophy, Settings, Clock, Star, Megaphone, LogOut } from "lucide-react";
 import { useAdminRole } from "@/components/AdminRoleContext";
 import { signOut } from "next-auth/react";
 
@@ -15,14 +15,8 @@ const tools = [
   {
     href: "/admin/members",
     label: "Members",
-    description: "Manage the roster",
+    description: "Roster, attendance & semesters",
     icon: Users,
-  },
-  {
-    href: "/admin/semesters",
-    label: "Semesters",
-    description: "Set the active semester",
-    icon: CalendarDays,
   },
   {
     href: "/admin/gallery",

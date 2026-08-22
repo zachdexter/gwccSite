@@ -34,9 +34,9 @@ type AttendanceLog = {
 function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
   const searchParams = useSearchParams();
-  const from = searchParams.get("from");
-  const backHref = from === "semesters" ? "/admin/semesters" : "/admin/members";
-  const backLabel = from === "semesters" ? "← Semesters" : "← Members";
+  const semesterId = searchParams.get("semesterId");
+  const backHref = semesterId ? `/admin/members?semesterId=${semesterId}` : "/admin/members";
+  const backLabel = "← Members";
   const [member, setMember] = useState<Member | null>(null);
   const [semesters, setSemesters] = useState<SemesterWithCount[]>([]);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);

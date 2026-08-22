@@ -1,242 +1,311 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { useConfirm } from "@/components/useConfirm";
-import { toast } from "sonner";
+import { getWeekBounds } from "@/lib/semester";
+import { MemberGrid, type GridMember } from "@/components/admin/MemberGrid";
+import { AttendanceMatrix, type MatrixMember, type MatrixWeek } from "@/components/admin/AttendanceMatrix";
+import { SemesterPicker, type Semester } from "@/components/admin/SemesterPicker";
+import { SemesterManageSheet } from "@/components/admin/SemesterManageSheet";
+import { AddMemberDialog, type NewMember } from "@/components/admin/AddMemberDialog";
+import { MemberActionsDialog } from "@/components/admin/MemberActionsDialog";
 
-type Member = {
-  id: number;
-  name: string;
-  email: string | null;
-  isSubsidized: boolean;
-  isActive: boolean;
+type MatrixData = {
+  semester: { id: number; name: string; startDate: string; endDate: string };
+  weeks: MatrixWeek[];
+  members: MatrixMember[];
 };
 
-type MissStat = {
-  missedOneDayCount: number;
-  missedBothDaysCount: number;
-};
+function MembersPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const querySemesterId = searchParams.get("semesterId");
 
-export default function MembersPage() {
-  const [members, setMembers] = useState<Member[]>([]);
-  const [missStats, setMissStats] = useState<Map<number, MissStat>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [showAdd, setShowAdd] = useState(false);
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [isSubsidized, setIsSubsidized] = useState(false);
+  const [semesters, setSemesters] = useState<Semester[]>([]);
+  const [semestersLoaded, setSemestersLoaded] = useState(false);
+  const [matrixData, setMatrixData] = useState<MatrixData | null>(null);
+  const [matrixLoading, setMatrixLoading] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "matrix">("grid");
   const [query, setQuery] = useState("");
-  const { confirm, ConfirmDialog } = useConfirm();
+  const [pending, setPending] = useState<string | null>(null);
+  const [manageOpen, setManageOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
+  const [actionsMember, setActionsMember] = useState<GridMember | null>(null);
 
+  const selectedSemesterId = querySemesterId ? Number(querySemesterId) : null;
+
+  const setSelectedSemesterId = useCallback(
+    (id: number) => {
+      router.replace(`/admin/members?semesterId=${id}`);
+    },
+    [router]
+  );
+
+  // Load semesters once, then default to the active one if no semester is selected yet.
   useEffect(() => {
-    async function fetchMembers() {
-      const res = await fetch("/api/members");
-      if (res.ok) setMembers(await res.json());
-      setLoading(false);
+    async function load() {
+      const res = await fetch("/api/semesters");
+      if (res.ok) {
+        const data: Semester[] = await res.json();
+        setSemesters(data);
+        if (!querySemesterId) {
+          const active = data.find((s) => s.isActive) ?? data[data.length - 1];
+          if (active) setSelectedSemesterId(active.id);
+        }
+      }
+      setSemestersLoaded(true);
     }
-
-    async function fetchMissStats() {
-      const attRes = await fetch("/api/attendance");
-      if (!attRes.ok) return;
-      const { semester } = await attRes.json();
-      if (!semester) return;
-      const summaryRes = await fetch(`/api/attendance/summary?semesterId=${semester.id}`);
-      if (!summaryRes.ok) return;
-      const { members: summaryMembers } = await summaryRes.json();
-      const map = new Map<number, MissStat>();
-      for (const m of summaryMembers) map.set(m.id, { missedOneDayCount: m.missedOneDayCount, missedBothDaysCount: m.missedBothDaysCount });
-      setMissStats(map);
-    }
-
-    fetchMembers();
-    fetchMissStats();
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function addMember(e: React.FormEvent) {
-    e.preventDefault();
-    const res = await fetch("/api/members", {
-      method: "POST",
+  // Fetch the combined roster + attendance matrix whenever the selected semester changes.
+  useEffect(() => {
+    if (!selectedSemesterId) return;
+    async function load() {
+      setMatrixLoading(true);
+      const res = await fetch(`/api/attendance/matrix?semesterId=${selectedSemesterId}`);
+      setMatrixData(res.ok ? await res.json() : null);
+      setMatrixLoading(false);
+    }
+    load();
+  }, [selectedSemesterId]);
+
+  function setCount(memberId: number, weekIndex: number, count: number) {
+    setMatrixData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        members: prev.members.map((m) =>
+          m.id === memberId
+            ? { ...m, weeklyCounts: m.weeklyCounts.map((c, i) => (i === weekIndex ? count : c)) }
+            : m
+        ),
+      };
+    });
+  }
+
+  async function adjustCell(member: MatrixMember, weekIndex: number, delta: 1 | -1) {
+    if (!matrixData) return;
+    const key = `${member.id}-${weekIndex}`;
+    if (pending === key) return;
+    setPending(key);
+
+    const week = matrixData.weeks[weekIndex];
+    const currentCount = member.weeklyCounts[weekIndex];
+
+    if (delta === -1 && currentCount <= 0) {
+      setPending(null);
+      return;
+    }
+
+    const res = await fetch("/api/attendance/cell", {
+      method: delta === 1 ? "POST" : "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, email, isSubsidized }),
+      body: JSON.stringify({
+        memberId: member.id,
+        semesterId: matrixData.semester.id,
+        weekStart: week.weekStart,
+        weekEnd: week.weekEnd,
+      }),
     });
 
     if (res.ok) {
-      const m = await res.json();
-      setMembers((prev) => [...prev, m].sort((a, b) => a.name.localeCompare(b.name)));
-      setName(""); setEmail(""); setIsSubsidized(false); setShowAdd(false);
-      toast.success(`Added ${m.name}`);
-    } else {
-      toast.error("Failed to add member");
+      setCount(member.id, weekIndex, currentCount + delta);
     }
+
+    setPending(null);
   }
 
-  async function toggleSubsidized(member: Member) {
-    const res = await fetch("/api/members", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: member.id, isSubsidized: !member.isSubsidized }),
+  function handleMemberAdded(m: NewMember) {
+    setMatrixData((prev) => {
+      if (!prev) return prev;
+      const newMatrixMember: MatrixMember = {
+        id: m.id,
+        name: m.name,
+        isSubsidized: m.isSubsidized,
+        weeklyCounts: prev.weeks.map(() => 0),
+      };
+      return {
+        ...prev,
+        members: [...prev.members, newMatrixMember].sort((a, b) => a.name.localeCompare(b.name)),
+      };
     });
-    if (res.ok) {
-      setMembers((prev) =>
-        prev.map((m) => (m.id === member.id ? { ...m, isSubsidized: !m.isSubsidized } : m))
-      );
-    }
   }
 
-  async function deactivate(member: Member) {
-    if (!(await confirm(`Remove ${member.name} from the active roster?`))) return;
-    const res = await fetch("/api/members", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: member.id }),
+  function handleSubsidyToggled(memberId: number) {
+    setMatrixData((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        members: prev.members.map((m) =>
+          m.id === memberId ? { ...m, isSubsidized: !m.isSubsidized } : m
+        ),
+      };
     });
-    if (res.ok) {
-      setMembers((prev) => prev.filter((m) => m.id !== member.id));
-      toast.success(`Removed ${member.name}`);
-    }
   }
 
-  const activeMembers = useMemo(() => members.filter((m) => m.isActive), [members]);
+  function handleMemberRemoved(memberId: number) {
+    setMatrixData((prev) => {
+      if (!prev) return prev;
+      return { ...prev, members: prev.members.filter((m) => m.id !== memberId) };
+    });
+  }
+
+  const { weekStart: currentWeekStart, weekEnd: currentWeekEnd } = useMemo(
+    () => getWeekBounds(new Date()),
+    []
+  );
+
+  const currentWeekIndex = useMemo(() => {
+    if (!matrixData) return -1;
+    return matrixData.weeks.findIndex(
+      (w) => new Date(w.weekStart).getTime() === currentWeekStart.getTime()
+    );
+  }, [matrixData, currentWeekStart]);
+
+  const gridMembers: GridMember[] = useMemo(() => {
+    if (!matrixData) return [];
+    return matrixData.members.map((m) => ({
+      id: m.id,
+      name: m.name,
+      isSubsidized: m.isSubsidized,
+      currentWeekCount: currentWeekIndex >= 0 ? m.weeklyCounts[currentWeekIndex] : 0,
+    }));
+  }, [matrixData, currentWeekIndex]);
+
   const searchFuse = useMemo(
-    () => new Fuse(activeMembers, { keys: ["name"], threshold: 0.4 }),
-    [activeMembers]
+    () => new Fuse(gridMembers, { keys: ["name"], threshold: 0.4 }),
+    [gridMembers]
   );
   const trimmedQuery = query.trim();
-  const active = trimmedQuery
+  const filteredGridMembers = trimmedQuery
     ? searchFuse.search(trimmedQuery).map((r) => r.item)
-    : activeMembers;
-  const subsidizedCount = members.filter((m) => m.isActive && m.isSubsidized).length;
+    : gridMembers;
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
-      {ConfirmDialog}
-      <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto space-y-6">
+      <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-xl font-bold text-foreground">Members</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
-            {members.filter((m) => m.isActive).length} active · {subsidizedCount} subsidized
+            {matrixData ? `${matrixData.members.length} active · ${matrixData.semester.name}` : "Roster & attendance"}
           </p>
         </div>
-        <Button
-          onClick={() => setShowAdd(!showAdd)}
-          className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90 font-semibold"
-        >
-          + Add Member
-        </Button>
+        <div className="flex items-center gap-2">
+          <SemesterPicker
+            semesters={semesters}
+            selectedId={selectedSemesterId}
+            onOpen={() => setManageOpen(true)}
+          />
+          <Button
+            onClick={() => setAddOpen(true)}
+            className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90 font-semibold"
+          >
+            + Add Member
+          </Button>
+        </div>
       </div>
 
-      {showAdd && (
-        <form onSubmit={addMember} className="bg-card border border-border rounded-lg p-4 space-y-4">
-          <h2 className="text-foreground font-semibold">New Member</h2>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label className="text-muted-foreground text-xs">Name *</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="bg-muted border-border text-foreground"
-              />
-            </div>
-            <div className="space-y-1">
-              <Label className="text-muted-foreground text-xs">Email</Label>
-              <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                className="bg-muted border-border text-foreground"
-              />
-            </div>
-          </div>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={isSubsidized}
-              onChange={(e) => setIsSubsidized(e.target.checked)}
-              className="accent-gwcc-gold"
-            />
-            <span className="text-muted-foreground text-sm">Subsidized membership</span>
-          </label>
-          <div className="flex gap-2">
-            <Button type="submit" className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90">Add</Button>
-            <Button type="button" variant="ghost" onClick={() => setShowAdd(false)} className="text-muted-foreground">
-              Cancel
-            </Button>
-          </div>
-        </form>
-      )}
-
-      <Input
-        placeholder="Search members…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        className="bg-card border-border text-foreground placeholder:text-muted-foreground/60"
-      />
-
-      <div className="rounded-lg border border-border overflow-hidden">
-        {loading ? (
-          <div className="text-center py-12 text-muted-foreground">Loading…</div>
-        ) : active.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">No members found.</div>
-        ) : (
-          active.map((member) => {
-            const stats = missStats.get(member.id);
-            return (
-              <div
-                key={member.id}
-                className="flex items-center justify-between px-4 py-3 border-b border-border hover:bg-muted/40 transition-colors"
-              >
-                <Link href={`/admin/members/${member.id}`} className="flex flex-col gap-0.5 hover:opacity-80 transition-opacity">
-                  <div className="flex items-center gap-3">
-                    <span className="text-foreground text-sm font-medium">{member.name}</span>
-                    {member.isSubsidized && (
-                      <Badge className="bg-gwcc-gold/15 text-gwcc-gold border-gwcc-gold/30 border text-xs">
-                        subsidized
-                      </Badge>
-                    )}
-                    {member.email && (
-                      <span className="text-muted-foreground text-xs hidden sm:block">{member.email}</span>
-                    )}
-                  </div>
-                  {stats && (
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <span className="text-xs text-yellow-400/70">
-                        1-day miss: {stats.missedOneDayCount}
-                      </span>
-                      <span className="text-muted-foreground text-xs">·</span>
-                      <span className="text-xs text-red-400/70">
-                        Both days: {stats.missedBothDaysCount}
-                      </span>
-                    </div>
-                  )}
-                </Link>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => toggleSubsidized(member)}
-                    className="text-xs text-muted-foreground hover:text-gwcc-gold transition-colors"
-                  >
-                    {member.isSubsidized ? "Remove subsidy" : "Add subsidy"}
-                  </button>
-                  <Button
-                    variant="destructive"
-                    size="xs"
-                    onClick={() => deactivate(member)}
-                    className="ml-2"
-                  >
-                    Remove
-                  </Button>
-                </div>
-              </div>
-            );
-          })
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="inline-flex rounded-md border border-border overflow-hidden">
+          <button
+            onClick={() => setViewMode("grid")}
+            className={`px-3 py-1.5 text-sm transition-colors ${
+              viewMode === "grid" ? "bg-gwcc-gold text-gwcc-dark font-semibold" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Grid
+          </button>
+          <button
+            onClick={() => setViewMode("matrix")}
+            className={`px-3 py-1.5 text-sm transition-colors ${
+              viewMode === "matrix" ? "bg-gwcc-gold text-gwcc-dark font-semibold" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Matrix
+          </button>
+        </div>
+        {viewMode === "grid" && (
+          <Input
+            placeholder="Search members…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="bg-card border-border text-foreground placeholder:text-muted-foreground/60 max-w-xs"
+          />
         )}
       </div>
+
+      {!semestersLoaded || matrixLoading ? (
+        <div className="text-center py-16 text-muted-foreground">Loading…</div>
+      ) : !selectedSemesterId ? (
+        <div className="text-center py-16 text-muted-foreground text-sm">
+          No semesters yet. Click the semester button above to create one.
+        </div>
+      ) : !matrixData ? (
+        <div className="text-center py-16 text-muted-foreground">Semester not found.</div>
+      ) : viewMode === "grid" ? (
+        <MemberGrid
+          members={filteredGridMembers}
+          weekEnd={currentWeekEnd}
+          semesterId={selectedSemesterId}
+          onManage={setActionsMember}
+        />
+      ) : (
+        <AttendanceMatrix
+          members={matrixData.members}
+          weeks={matrixData.weeks}
+          semesterId={matrixData.semester.id}
+          pending={pending}
+          onAdjust={adjustCell}
+        />
+      )}
+
+      <SemesterManageSheet
+        open={manageOpen}
+        onOpenChange={setManageOpen}
+        semesters={semesters}
+        selectedId={selectedSemesterId}
+        onSelect={setSelectedSemesterId}
+        onCreated={(s) => {
+          setSemesters((prev) => [...prev, s]);
+          setSelectedSemesterId(s.id);
+        }}
+        onActivated={(id) => {
+          setSemesters((prev) => prev.map((s) => ({ ...s, isActive: s.id === id })));
+        }}
+        onDeactivated={(id) => {
+          setSemesters((prev) => prev.map((s) => (s.id === id ? { ...s, isActive: false } : s)));
+        }}
+        onDeleted={(id) => {
+          setSemesters((prev) => prev.filter((s) => s.id !== id));
+          if (selectedSemesterId === id) {
+            const remaining = semesters.filter((s) => s.id !== id);
+            const next = remaining.find((s) => s.isActive) ?? remaining[remaining.length - 1];
+            if (next) setSelectedSemesterId(next.id);
+          }
+        }}
+      />
+
+      <AddMemberDialog open={addOpen} onOpenChange={setAddOpen} onAdded={handleMemberAdded} />
+
+      <MemberActionsDialog
+        member={actionsMember}
+        onOpenChange={(open) => !open && setActionsMember(null)}
+        onSubsidyToggled={handleSubsidyToggled}
+        onRemoved={handleMemberRemoved}
+      />
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense>
+      <MembersPage />
+    </Suspense>
   );
 }
