@@ -101,17 +101,17 @@ export default function LoginPage() {
           ))}
         </div>
       )}
-      <div className="w-full max-w-sm">
+      <div className="relative w-full max-w-sm rounded-xl border border-gwcc-gold/25 bg-gwcc-navy/85 shadow-xl p-6 sm:border-0 sm:bg-transparent sm:shadow-none sm:p-0">
         <div className="mb-8 text-center">
           <span className="text-gwcc-gold font-semibold tracking-widest text-xs uppercase">
             GW Climbing Club
           </span>
-          <h1 className="mt-2 text-2xl font-bold text-foreground">Admin Access</h1>
+          <h1 className="mt-2 text-2xl font-bold text-gwcc-light sm:text-foreground">Admin Access</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-muted-foreground text-sm">
+            <Label htmlFor="password" className="text-gwcc-light/70 sm:text-muted-foreground text-sm">
               Password
             </Label>
             <Input
@@ -136,7 +136,10 @@ export default function LoginPage() {
           </Button>
         </form>
         <div className="mt-6 text-center">
-          <Link href="/" className="text-muted-foreground hover:text-foreground text-sm transition-colors">
+          <Link
+            href="/"
+            className="text-gwcc-light/70 hover:text-gwcc-light sm:text-muted-foreground sm:hover:text-foreground text-sm transition-colors"
+          >
             ← Back to site
           </Link>
         </div>
