@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -30,13 +31,10 @@ export default function MembershipPage() {
               along to someone who can use it more.
             </p>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Got questions? We&apos;d love to hear from you at{" "}
-              <a
-                href={`mailto:${siteConfig.contactEmail}`}
-                className="text-gwcc-gold hover:underline"
-              >
-                {siteConfig.contactEmail}
-              </a>
+              Got questions? We&apos;d love to hear from you —{" "}
+              <Link href="/contact" className="text-gwcc-gold hover:underline">
+                reach out here
+              </Link>
               .
             </p>
           </section>

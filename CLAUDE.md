@@ -28,6 +28,8 @@ CLOUDINARY_API_KEY=
 CLOUDINARY_API_SECRET=
 PRESIDENT_PASS=       # Seeded into accounts table via db:seed
 EBOARD_PASS=          # Seeded into accounts table via db:seed
+RESEND_API_KEY=       # Sends /contact form submissions via Resend
+RESEND_FROM_EMAIL=    # Optional: verified sender, defaults to onboarding@resend.dev
 ```
 
 ## Architecture Overview
@@ -71,6 +73,10 @@ Week/attendance calculation utilities live in `src/lib/semester.ts`.
 ### Images
 
 All photos (gallery + comp team headshots) are hosted on **Cloudinary**. The gallery API uploads to Cloudinary and stores the `publicId` + `secureUrl` in the DB. Deletion removes from both. Cloudinary helpers are in `src/lib/cloudinary.ts`.
+
+### Contact Form
+
+`/contact` renders `ContactForm` (`src/components/ContactForm.tsx`), which POSTs to `src/app/api/contact/route.ts`. That route sends an email via **Resend** to `siteConfig.contactEmail` (`src/config/site.ts`) with the visitor's address as `replyTo`. The email address is intentionally kept out of the public page's HTML (no `mailto:` link) to avoid scrapers — it only ever appears server-side.
 
 ### Styling
 

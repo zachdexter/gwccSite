@@ -2,6 +2,7 @@ import Link from "next/link";
 import { siteConfig } from "@/config/site";
 import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
+import { ContactForm } from "@/components/ContactForm";
 
 export default function ContactPage() {
   return (
@@ -50,15 +51,11 @@ export default function ContactPage() {
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
               Partnerships &amp; Inquiries
             </div>
-            <p className="text-muted-foreground mb-2">
-              Brands, sponsors, and other organizations can reach us directly at
+            <p className="text-muted-foreground mb-6">
+              Brands, sponsors, and other organizations can reach us directly using the form
+              below.
             </p>
-            <a
-              href={`mailto:${siteConfig.contactEmail}`}
-              className="text-gwcc-gold text-lg font-medium hover:underline"
-            >
-              {siteConfig.contactEmail}
-            </a>
+            <ContactForm />
           </section>
         </main>
       </div>
