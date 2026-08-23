@@ -36,6 +36,16 @@ export function isWeekClosed(weekEnd: Date): boolean {
   return weekEnd < new Date();
 }
 
+export function isDateWithinSemester(
+  semester: Pick<Semester, "startDate" | "endDate">,
+  date: Date = new Date()
+): boolean {
+  const start = new Date(semester.startDate);
+  const end = new Date(semester.endDate);
+  end.setHours(23, 59, 59, 999);
+  return date >= start && date <= end;
+}
+
 export function getEffectiveSubsidyStatus(
   changes: Pick<SubsidyChange, "isSubsidized" | "changedAt">[],
   asOf: Date

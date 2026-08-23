@@ -10,6 +10,7 @@ import { MemberGrid, type GridMember } from "@/components/admin/MemberGrid";
 import { AttendanceMatrix, type MatrixMember, type MatrixWeek } from "@/components/admin/AttendanceMatrix";
 import { SemesterPicker, type Semester } from "@/components/admin/SemesterPicker";
 import { SemesterManageSheet } from "@/components/admin/SemesterManageSheet";
+import { SemesterDateWarning } from "@/components/admin/SemesterDateWarning";
 import { AddMemberDialog, type NewMember } from "@/components/admin/AddMemberDialog";
 import { MemberActionsDialog } from "@/components/admin/MemberActionsDialog";
 
@@ -209,6 +210,8 @@ function MembersPage() {
           </Button>
         </div>
       </div>
+
+      <SemesterDateWarning semester={semesters.find((s) => s.isActive) ?? null} />
 
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="inline-flex rounded-md border border-border overflow-hidden">

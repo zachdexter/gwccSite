@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef, useMemo } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import Fuse from "fuse.js";
 import { Input } from "@/components/ui/input";
@@ -12,6 +13,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { SemesterDateWarning } from "@/components/admin/SemesterDateWarning";
 
 type Member = {
   id: number;
@@ -19,6 +21,8 @@ type Member = {
   isSubsidized: boolean;
   isActive: boolean;
 };
+
+type ActiveSemester = { name: string; startDate: string; endDate: string };
 
 type AttendanceLog = {
   id: number;
@@ -36,6 +40,8 @@ export default function AttendancePage() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [noActiveSemester, setNoActiveSemester] = useState(false);
+  const [activeSemester, setActiveSemester] = useState<ActiveSemester | null>(null);
   const [creatingMember, setCreatingMember] = useState(false);
   const [confirmDuplicate, setConfirmDuplicate] = useState<Member | null>(null);
   const [pendingNewName, setPendingNewName] = useState("");
@@ -50,6 +56,18 @@ export default function AttendancePage() {
         fetch("/api/attendance"),
       ]);
 
+      if (attendanceRes.status === 404) {
+        const data = await attendanceRes.json().catch(() => null);
+        if (data?.error === "No active semester") {
+          setNoActiveSemester(true);
+          setLoadError(false);
+          const membersData: Member[] = membersRes.ok ? await membersRes.json() : [];
+          setMembers(membersData.filter((m) => m.isActive));
+          setLogs([]);
+          return;
+        }
+      }
+
       if (!membersRes.ok || !attendanceRes.ok) throw new Error("Failed to load");
 
       const membersData: Member[] = await membersRes.json();
@@ -57,7 +75,9 @@ export default function AttendancePage() {
 
       const attendanceData = await attendanceRes.json();
       setLogs(attendanceData.logs ?? []);
+      setActiveSemester(attendanceData.semester ?? null);
       setLoadError(false);
+      setNoActiveSemester(false);
     } catch {
       setLoadError(true);
       toast.error("Couldn't load check-in data — check your connection", {
@@ -148,7 +168,7 @@ export default function AttendancePage() {
         const data = await res.json().catch(() => null);
         toast.error(
           data?.error === "No active semester"
-            ? "No active semester — set one in Semesters"
+            ? "No active semester — set one in Members"
             : "Failed to log attendance"
         );
       } else {
@@ -269,6 +289,8 @@ export default function AttendancePage() {
         </span>
       </div>
 
+      <SemesterDateWarning semester={activeSemester} />
+
       <Input
         ref={inputRef}
         placeholder="Search by name…"
@@ -281,6 +303,16 @@ export default function AttendancePage() {
       {loadError && (
         <p className="text-xs text-destructive mt-2 shrink-0">
           Showing possibly stale data — connection issue.
+        </p>
+      )}
+
+      {noActiveSemester && (
+        <p className="text-xs text-destructive mt-2 shrink-0">
+          No active semester — check-ins can&apos;t be logged until one is set in{" "}
+          <Link href="/admin/members" className="underline underline-offset-2">
+            Members
+          </Link>
+          .
         </p>
       )}
 
