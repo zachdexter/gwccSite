@@ -81,6 +81,7 @@ export const galleryPhotos = pgTable("gallery_photos", {
   driveFileId: text("drive_file_id").unique(),
   showInHero: boolean("show_in_hero").notNull().default(false),
   heroDisplayOrder: integer("hero_display_order").notNull().default(0),
+  heroFocusY: integer("hero_focus_y").notNull().default(50),
   isShowcase: boolean("is_showcase").notNull().default(false),
 });
 

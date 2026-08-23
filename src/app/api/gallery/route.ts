@@ -36,10 +36,20 @@ export async function PATCH(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { id, isShowcase, showInHero } = await req.json();
+  const { id, isShowcase, showInHero, heroFocusY } = await req.json();
   if (typeof id !== "number") return NextResponse.json({ error: "id required" }, { status: 400 });
-  if (typeof isShowcase !== "boolean" && typeof showInHero !== "boolean") {
-    return NextResponse.json({ error: "isShowcase or showInHero required" }, { status: 400 });
+  if (
+    typeof isShowcase !== "boolean" &&
+    typeof showInHero !== "boolean" &&
+    typeof heroFocusY !== "number"
+  ) {
+    return NextResponse.json(
+      { error: "isShowcase, showInHero, or heroFocusY required" },
+      { status: 400 }
+    );
+  }
+  if (typeof heroFocusY === "number" && (heroFocusY < 0 || heroFocusY > 100)) {
+    return NextResponse.json({ error: "heroFocusY must be between 0 and 100" }, { status: 400 });
   }
 
   try {
@@ -53,9 +63,10 @@ export async function PATCH(req: Request) {
         .where(and(eq(galleryPhotos.albumId, target.albumId), eq(galleryPhotos.isShowcase, true)));
     }
 
-    const updates: Partial<{ isShowcase: boolean; showInHero: boolean }> = {};
+    const updates: Partial<{ isShowcase: boolean; showInHero: boolean; heroFocusY: number }> = {};
     if (typeof isShowcase === "boolean") updates.isShowcase = isShowcase;
     if (typeof showInHero === "boolean") updates.showInHero = showInHero;
+    if (typeof heroFocusY === "number") updates.heroFocusY = Math.round(heroFocusY);
 
     const [photo] = await db
       .update(galleryPhotos)

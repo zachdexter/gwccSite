@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 interface HeroPhoto {
   id: number;
   secureUrl: string;
+  heroFocusY: number;
 }
 
 export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
@@ -43,6 +44,7 @@ export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
             src={current.secureUrl}
             alt=""
             className="absolute inset-0 w-full h-full object-cover"
+            style={{ objectPosition: `50% ${current.heroFocusY}%` }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}

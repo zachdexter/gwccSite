@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { ReorderableList } from "@/components/ReorderableList";
+import { HeroFocusDialog } from "@/components/HeroFocusDialog";
 
 type Photo = {
   id: number;
@@ -14,12 +15,14 @@ type Photo = {
   albumId: number | null;
   showInHero: boolean;
   heroDisplayOrder: number;
+  heroFocusY: number;
 };
 
 export default function HeroCarouselAdminPage() {
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [orientation, setOrientation] = useState<Record<number, "landscape" | "portrait">>({});
+  const [focusPhoto, setFocusPhoto] = useState<Photo | null>(null);
 
   function handleImgLoad(id: number, e: React.SyntheticEvent<HTMLImageElement>) {
     const img = e.currentTarget;
@@ -70,6 +73,20 @@ export default function HeroCarouselAdminPage() {
     if (!res.ok) toast.error("Failed to save order");
   }
 
+  async function saveFocus(id: number, heroFocusY: number) {
+    const res = await fetch("/api/gallery", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, heroFocusY }),
+    });
+    if (res.ok) {
+      setPhotos((prev) => prev.map((p) => (p.id === id ? { ...p, heroFocusY } : p)));
+      toast.success("Hero position saved");
+    } else {
+      toast.error("Failed to save position");
+    }
+  }
+
   const selected = photos
     .filter((p) => p.showInHero)
     .sort((a, b) => a.heroDisplayOrder - b.heroDisplayOrder);
@@ -108,6 +125,13 @@ export default function HeroCarouselAdminPage() {
                   className="w-12 h-12 object-cover rounded flex-shrink-0"
                 />
                 <span className="text-sm text-card-foreground truncate flex-1">{photo.filename}</span>
+                <button
+                  type="button"
+                  onClick={() => setFocusPhoto(photo)}
+                  className="text-xs text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                >
+                  Adjust position
+                </button>
               </div>
             )}
           />
@@ -170,6 +194,13 @@ export default function HeroCarouselAdminPage() {
           </div>
         )}
       </section>
+
+      <HeroFocusDialog
+        photo={focusPhoto}
+        open={focusPhoto !== null}
+        onOpenChange={(open) => !open && setFocusPhoto(null)}
+        onSave={saveFocus}
+      />
     </div>
   );
 }
