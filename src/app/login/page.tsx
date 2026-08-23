@@ -50,7 +50,10 @@ export default function LoginPage() {
   const [canvasSize, setCanvasSize] = useState<{ width: number; height: number } | null>(null);
   useEffect(() => {
     function readSize() {
-      setCanvasSize({ width: window.innerWidth, height: window.innerHeight });
+      setCanvasSize({
+        width: document.documentElement.clientWidth,
+        height: document.documentElement.clientHeight,
+      });
     }
     readSize();
   }, []);
@@ -75,7 +78,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-screen flex items-center justify-center bg-background px-4 overflow-hidden">
+    <main className="relative min-h-dvh flex items-center justify-center bg-background px-4 overflow-hidden">
       {canvasSize && (
         <div
           className="absolute top-1/2 left-1/2 pointer-events-none"
