@@ -39,10 +39,10 @@ export default async function HomePage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-dvh flex flex-col">
         <HeroCarousel photos={photos} />
 
-        <div className="h-screen flex flex-col">
+        <div className="h-dvh flex flex-col">
           {/* Nav */}
           <header className="relative z-20 bg-background px-3.5 py-3 flex items-center justify-between border-b border-border">
             <Link href="/" aria-label="GWCC home" className="flex items-center -my-3 group">

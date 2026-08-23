@@ -7,10 +7,17 @@ export function ScrollIndicator() {
   const { scrollY } = useScroll();
   const opacity = useTransform(scrollY, [0, 150], [1, 0]);
 
+  function scrollToSessionTimes() {
+    document.getElementById("practice-times")?.scrollIntoView({ behavior: "smooth" });
+  }
+
   return (
-    <motion.div
+    <motion.button
+      type="button"
+      onClick={scrollToSessionTimes}
+      aria-label="Scroll to session times"
       style={{ opacity }}
-      className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+      className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 cursor-pointer"
     >
       <motion.div
         animate={{ y: [0, 8, 0] }}
@@ -19,6 +26,6 @@ export function ScrollIndicator() {
       >
         <ChevronDown className="w-6 h-6" />
       </motion.div>
-    </motion.div>
+    </motion.button>
   );
 }
