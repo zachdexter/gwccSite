@@ -15,8 +15,8 @@ export default function MembershipPage() {
             </h1>
             <p className="text-muted-foreground max-w-xl mx-auto mb-4">
               We&apos;re excited to be able to offer a subsidized membership to 30-40 members
-              each year! Come to tryouts at the beginning of the school year to be considered —
-              if you missed them or couldn&apos;t make it, no worries, just join our{" "}
+              each year! Come to orientation days at the beginning of the school year to be
+              considered — if you missed them or couldn&apos;t make it, no worries, just join our{" "}
               <a
                 href={siteConfig.waitlistUrl}
                 target="_blank"
@@ -26,7 +26,7 @@ export default function MembershipPage() {
                 waitlist
               </a>{" "}
               and we&apos;ll reach out. To keep your subsidy, we ask that you make it to two
-              practices a week; if that&apos;s tough on a regular basis, we may pass the spot
+              sessions a week; if that&apos;s tough on a regular basis, we may pass the spot
               along to someone who can use it more.
             </p>
             <p className="text-muted-foreground max-w-xl mx-auto">

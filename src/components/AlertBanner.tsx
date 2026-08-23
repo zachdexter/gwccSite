@@ -46,7 +46,7 @@ export function AlertBanner() {
   if (alerts.length === 0) return null;
 
   return (
-    <div className="absolute top-6 left-0 right-0 z-20 w-full max-w-2xl mx-auto px-6 space-y-2">
+    <div className="absolute top-20 sm:top-6 left-0 right-0 z-20 w-full max-w-2xl mx-auto px-6 space-y-2">
       {alerts.map((a) => (
         <div
           key={a.id}

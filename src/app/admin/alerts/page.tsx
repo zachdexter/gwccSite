@@ -110,7 +110,7 @@ export default function AlertsPage() {
               required
               rows={3}
               className="w-full px-3 py-2 rounded-md bg-muted border border-border text-foreground text-sm resize-none"
-              placeholder="No practice this week due to..."
+              placeholder="No sessions this week due to..."
             />
           </div>
           <div className="space-y-1">

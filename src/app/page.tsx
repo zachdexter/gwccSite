@@ -66,14 +66,12 @@ export default async function HomePage() {
           </section>
         </div>
 
-        {/* Practice times */}
-        {practiceScheduleItems.length > 0 && (
-          <section id="practice-times" className="relative px-6 py-12 scroll-mt-16">
-            <div className="max-w-2xl mx-auto">
-              <PracticeSchedule times={practiceScheduleItems} />
-            </div>
-          </section>
-        )}
+        {/* Session times */}
+        <section id="practice-times" className="relative px-6 py-12 scroll-mt-16">
+          <div className="max-w-2xl mx-auto">
+            <PracticeSchedule times={practiceScheduleItems} />
+          </div>
+        </section>
 
         {/* Footer */}
         <footer className="relative bg-background/90 backdrop-blur-sm border-t border-border px-6 py-2.5 flex items-center justify-between text-xs text-muted-foreground">

@@ -38,8 +38,8 @@ const tools = [
   },
   {
     href: "/admin/practice",
-    label: "Practice Times",
-    description: "Edit the practice schedule",
+    label: "Session Times",
+    description: "Edit the session schedule",
     icon: Clock,
   },
   {

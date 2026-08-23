@@ -17,7 +17,7 @@ export default function ContactPage() {
             <p className="text-muted-foreground max-w-xl mx-auto">
               Anyone is welcome to join and climb with us at any of our{" "}
               <Link href="/#practice-times" className="text-gwcc-gold hover:underline">
-                practice times
+                session times
               </Link>{" "}
               at Movement Crystal City! If you&apos;re interested in learning more about our subsidized membership,{" "}
               <Link href="/membership" className="text-gwcc-gold hover:underline">

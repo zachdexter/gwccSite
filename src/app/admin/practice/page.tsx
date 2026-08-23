@@ -91,7 +91,7 @@ export default function PracticeTimesPage() {
   }
 
   async function remove(t: PracticeTime) {
-    if (!(await confirm(`Remove ${t.day} practice?`))) return;
+    if (!(await confirm(`Remove ${t.day} session?`))) return;
     const res = await fetch("/api/practice-times", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
@@ -108,7 +108,7 @@ export default function PracticeTimesPage() {
       {ConfirmDialog}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-foreground">Practice Times</h1>
+          <h1 className="text-xl font-bold text-foreground">Session Times</h1>
           <p className="text-muted-foreground text-sm mt-0.5">
             Shown on the home page schedule
           </p>
@@ -123,7 +123,7 @@ export default function PracticeTimesPage() {
 
       {showAdd && (
         <form onSubmit={save} className="bg-card border border-border rounded-lg p-4 space-y-4">
-          <h2 className="text-card-foreground font-semibold">{editing ? "Edit Practice Time" : "New Practice Time"}</h2>
+          <h2 className="text-card-foreground font-semibold">{editing ? "Edit Session Time" : "New Session Time"}</h2>
           <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label className="text-muted-foreground text-xs">Day</Label>
@@ -171,7 +171,7 @@ export default function PracticeTimesPage() {
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">Loading…</div>
         ) : times.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">No practice times set.</div>
+          <div className="text-center py-12 text-muted-foreground">No session times set.</div>
         ) : (
           times.map((t) => (
             <div
