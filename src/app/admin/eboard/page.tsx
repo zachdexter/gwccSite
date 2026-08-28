@@ -4,10 +4,14 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/useConfirm";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { ReorderableList } from "@/components/ReorderableList";
 import { toast } from "sonner";
+import { cn, bioTextClass } from "@/lib/utils";
+
+type BioFontSize = "sm" | "base" | "lg";
 
 type EboardMember = {
   id: number;
@@ -17,9 +21,18 @@ type EboardMember = {
   headshotUrl: string | null;
   displayOrder: number;
   isActive: boolean;
+  bio: string | null;
+  bioFontSize: BioFontSize;
+  bioBold: boolean;
+  bioItalic: boolean;
 };
 
 const YEARS = ["Freshman", "Sophomore", "Junior", "Senior", "Alumni"];
+const BIO_FONT_SIZES: { value: BioFontSize; label: string }[] = [
+  { value: "sm", label: "Small" },
+  { value: "base", label: "Medium" },
+  { value: "lg", label: "Large" },
+];
 
 export default function EboardAdminPage() {
   const [members, setMembers] = useState<EboardMember[]>([]);
@@ -28,6 +41,7 @@ export default function EboardAdminPage() {
   const [editing, setEditing] = useState<EboardMember | null>(null);
   const [form, setForm] = useState({
     name: "", role: "", year: "Freshman",
+    bio: "", bioFontSize: "base" as BioFontSize, bioBold: false, bioItalic: false,
   });
   const [headshotFile, setHeadshotFile] = useState<File | null>(null);
   const [headshotPreview, setHeadshotPreview] = useState<string | null>(null);
@@ -47,7 +61,7 @@ export default function EboardAdminPage() {
   }, []);
 
   function resetForm() {
-    setForm({ name: "", role: "", year: "Freshman" });
+    setForm({ name: "", role: "", year: "Freshman", bio: "", bioFontSize: "base", bioBold: false, bioItalic: false });
     setHeadshotFile(null);
     if (headshotPreview) URL.revokeObjectURL(headshotPreview);
     setHeadshotPreview(null);
@@ -129,7 +143,10 @@ export default function EboardAdminPage() {
 
   function startEdit(m: EboardMember) {
     setEditing(m);
-    setForm({ name: m.name, role: m.role, year: m.year });
+    setForm({
+      name: m.name, role: m.role, year: m.year,
+      bio: m.bio ?? "", bioFontSize: m.bioFontSize, bioBold: m.bioBold, bioItalic: m.bioItalic,
+    });
     setShowAdd(true);
   }
 
@@ -201,6 +218,46 @@ export default function EboardAdminPage() {
             >
               {YEARS.map((y) => <option key={y}>{y}</option>)}
             </select>
+          </div>
+          <div className="space-y-1">
+            <Label className="text-muted-foreground text-xs">About Me (optional)</Label>
+            <Textarea
+              value={form.bio}
+              onChange={(e) => setForm({ ...form, bio: e.target.value })}
+              placeholder="A little bit about this member…"
+              rows={3}
+              className="bg-muted border-border text-foreground"
+            />
+            <div className="flex items-center gap-2 pt-1">
+              <select
+                value={form.bioFontSize}
+                onChange={(e) => setForm({ ...form, bioFontSize: e.target.value as BioFontSize })}
+                className="h-8 px-2 rounded-md bg-muted border border-border text-foreground text-xs"
+              >
+                {BIO_FONT_SIZES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={() => setForm({ ...form, bioBold: !form.bioBold })}
+                className={cn("font-bold", form.bioBold && "bg-gwcc-gold text-gwcc-dark border-gwcc-gold")}
+              >
+                B
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={() => setForm({ ...form, bioItalic: !form.bioItalic })}
+                className={cn("italic", form.bioItalic && "bg-gwcc-gold text-gwcc-dark border-gwcc-gold")}
+              >
+                I
+              </Button>
+            </div>
+            {form.bio && (
+              <p className={cn("text-card-foreground pt-1", bioTextClass(form))}>{form.bio}</p>
+            )}
           </div>
           <div className="space-y-1">
             <Label className="text-muted-foreground text-xs">Headshot (optional)</Label>

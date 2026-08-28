@@ -21,7 +21,7 @@ export function HeroCarousel({ photos }: { photos: HeroPhoto[] }) {
       setIndex((i) => (i + 1) % photos.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, [photos.length]);
+  }, [photos.length, index]);
 
   if (photos.length === 0) return null;
 

@@ -6,7 +6,18 @@ import { deleteFromCloudinary, getPublicIdFromUrl } from "@/lib/cloudinary";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-const EDITABLE_FIELDS = ["name", "role", "year", "headshotUrl", "displayOrder", "isActive"] as const;
+const EDITABLE_FIELDS = [
+  "name",
+  "role",
+  "year",
+  "headshotUrl",
+  "displayOrder",
+  "isActive",
+  "bio",
+  "bioFontSize",
+  "bioBold",
+  "bioItalic",
+] as const;
 
 export async function GET() {
   try {

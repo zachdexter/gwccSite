@@ -111,6 +111,10 @@ export const eboardMembers = pgTable("eboard_members", {
   displayOrder: integer("display_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  bio: text("bio"),
+  bioFontSize: text("bio_font_size", { enum: ["sm", "base", "lg"] }).notNull().default("base"),
+  bioBold: boolean("bio_bold").notNull().default(false),
+  bioItalic: boolean("bio_italic").notNull().default(false),
 });
 
 export const alerts = pgTable("alerts", {
