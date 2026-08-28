@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { RotateCw } from "lucide-react";
 import { bioTextClass } from "@/lib/utils";
+import { BioText } from "@/components/BioText";
 
 type EboardMember = {
   id: number;
@@ -97,7 +98,7 @@ function EboardCard({ member: m }: { member: EboardMember }) {
         {hasBio && (
           <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] bg-card border border-border rounded-xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] ring-1 ring-white/10 p-5 flex flex-col">
             <p className="text-gwcc-gold text-xs uppercase tracking-widest font-semibold">{m.name}</p>
-            <p className={`text-card-foreground pt-2 overflow-y-auto ${bioTextClass(m)}`}>{m.bio}</p>
+            <BioText text={m.bio!} className={`text-card-foreground pt-2 overflow-y-auto ${bioTextClass(m)}`} />
           </div>
         )}
       </motion.div>

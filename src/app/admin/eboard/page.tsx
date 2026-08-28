@@ -10,6 +10,7 @@ import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { ReorderableList } from "@/components/ReorderableList";
 import { toast } from "sonner";
 import { cn, bioTextClass } from "@/lib/utils";
+import { BioText } from "@/components/BioText";
 
 type BioFontSize = "sm" | "base" | "lg";
 
@@ -49,7 +50,24 @@ export default function EboardAdminPage() {
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const bioRef = useRef<HTMLTextAreaElement>(null);
   const { confirm, ConfirmDialog } = useConfirm();
+
+  function boldSelection() {
+    const el = bioRef.current;
+    if (!el) return;
+    const { selectionStart, selectionEnd, value } = el;
+    if (selectionStart === selectionEnd) return;
+    const newValue =
+      value.slice(0, selectionStart) +
+      `**${value.slice(selectionStart, selectionEnd)}**` +
+      value.slice(selectionEnd);
+    setForm((f) => ({ ...f, bio: newValue }));
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(selectionStart + 2, selectionEnd + 2);
+    });
+  }
 
   useEffect(() => {
     async function fetchMembers() {
@@ -221,14 +239,31 @@ export default function EboardAdminPage() {
           </div>
           <div className="space-y-1">
             <Label className="text-muted-foreground text-xs">About Me (optional)</Label>
+            <div className="flex items-center gap-1 pb-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={boldSelection}
+                title="Bold the selected words"
+                className="font-bold"
+              >
+                B
+              </Button>
+              <span className="text-muted-foreground text-[11px]">
+                Select text and click B to bold just those words. Enter makes a new line.
+              </span>
+            </div>
             <Textarea
+              ref={bioRef}
               value={form.bio}
               onChange={(e) => setForm({ ...form, bio: e.target.value })}
               placeholder="A little bit about this member…"
-              rows={3}
+              rows={4}
               className="bg-muted border-border text-foreground"
             />
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex items-center gap-2 pt-2">
+              <span className="text-muted-foreground text-[11px]">Overall style:</span>
               <select
                 value={form.bioFontSize}
                 onChange={(e) => setForm({ ...form, bioFontSize: e.target.value as BioFontSize })}
@@ -241,6 +276,7 @@ export default function EboardAdminPage() {
                 variant="outline"
                 size="xs"
                 onClick={() => setForm({ ...form, bioBold: !form.bioBold })}
+                title="Bold the entire bio"
                 className={cn("font-bold", form.bioBold && "bg-gwcc-gold text-gwcc-dark border-gwcc-gold")}
               >
                 B
@@ -250,13 +286,14 @@ export default function EboardAdminPage() {
                 variant="outline"
                 size="xs"
                 onClick={() => setForm({ ...form, bioItalic: !form.bioItalic })}
+                title="Italicize the entire bio"
                 className={cn("italic", form.bioItalic && "bg-gwcc-gold text-gwcc-dark border-gwcc-gold")}
               >
                 I
               </Button>
             </div>
             {form.bio && (
-              <p className={cn("text-card-foreground pt-1", bioTextClass(form))}>{form.bio}</p>
+              <BioText text={form.bio} className={cn("text-card-foreground pt-2", bioTextClass(form))} />
             )}
           </div>
           <div className="space-y-1">
