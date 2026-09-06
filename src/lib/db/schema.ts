@@ -117,6 +117,15 @@ export const eboardMembers = pgTable("eboard_members", {
   bioItalic: boolean("bio_italic").notNull().default(false),
 });
 
+export const faqQuestions = pgTable("faq_questions", {
+  id: serial("id").primaryKey(),
+  question: text("question").notNull(),
+  answer: text("answer").notNull(),
+  displayOrder: integer("display_order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const alerts = pgTable("alerts", {
   id: serial("id").primaryKey(),
   message: text("message").notNull(),
@@ -140,5 +149,6 @@ export type GalleryPhoto = typeof galleryPhotos.$inferSelect;
 export type HeroPhoto = typeof heroPhotos.$inferSelect;
 export type PracticeTime = typeof practiceTimes.$inferSelect;
 export type EboardMember = typeof eboardMembers.$inferSelect;
+export type FaqQuestion = typeof faqQuestions.$inferSelect;
 export type Alert = typeof alerts.$inferSelect;
 export type SubsidyChange = typeof subsidyChanges.$inferSelect;

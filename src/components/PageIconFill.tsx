@@ -36,14 +36,26 @@ function insideAny(x: number, y: number, rects: Rect[]): boolean {
   return rects.some((r) => x >= r.left && x <= r.right && y >= r.top && y <= r.bottom);
 }
 
-function generatePoints(width: number, minY: number, maxY: number, pool: string[], excludeRects: Rect[]): Point[] {
+function generatePoints(
+  width: number,
+  minY: number,
+  maxY: number,
+  pool: string[],
+  excludeRects: Rect[],
+  existing: Point[] = []
+): Point[] {
   const usableHeight = maxY - minY;
   if (pool.length === 0 || width <= ICON_RADIUS * 2 || usableHeight <= 0) return [];
 
-  const placed: Point[] = [];
+  // Keep whatever previously-placed points are still valid (in range, not newly excluded) so
+  // that a height-only change — e.g. an accordion expanding — only adds/trims points at the
+  // edges instead of reshuffling every icon on the page.
+  const placed: Point[] = existing.filter(
+    (p) => p.y >= minY && p.y <= maxY && !insideAny(p.x, p.y, excludeRects)
+  );
   const maxCount = Math.min(MAX_TOTAL_POINTS, Math.ceil((width * usableHeight) / (MIN_DIST * MIN_DIST)));
 
-  for (let i = 0; i < maxCount; i++) {
+  for (let i = placed.length; i < maxCount; i++) {
     let placedThisPoint = false;
     for (let attempt = 0; attempt < MAX_ATTEMPTS_PER_POINT; attempt++) {
       const x = ICON_RADIUS + Math.random() * (width - ICON_RADIUS * 2);
@@ -80,15 +92,16 @@ function pageRect(el: Element): Rect {
   };
 }
 
-function signature(width: number, rects: Rect[]): string {
+function signature(width: number, height: number, rects: Rect[]): string {
   const round = (n: number) => Math.round(n / 5) * 5;
-  return [width, ...rects.flatMap((r) => [round(r.left), round(r.top), round(r.right), round(r.bottom)])].join(",");
+  return [width, round(height), ...rects.flatMap((r) => [round(r.left), round(r.top), round(r.right), round(r.bottom)])].join(",");
 }
 
 export function PageIconFill({ pool, clusterBounds }: { pool: string[]; clusterBounds: Rect | null }) {
   const [points, setPoints] = useState<Point[]>([]);
   const [width, setWidth] = useState(0);
   const lastSignature = useRef("");
+  const lastWidth = useRef(0);
 
   useEffect(() => {
     function regenerate() {
@@ -124,19 +137,32 @@ export function PageIconFill({ pool, clusterBounds }: { pool: string[]; clusterB
       }
 
       const minY = headerRect.top + HEADER_PADDING;
-      const maxY = contentRect.bottom + BOTTOM_PADDING;
+      // Fill down to at least the bottom of the initial viewport, even when there's very
+      // little content (e.g. a single FAQ question) — otherwise the page reads as half-empty
+      // below the fold.
+      const maxY = Math.max(contentRect.bottom + BOTTOM_PADDING, window.innerHeight - BOTTOM_PADDING);
 
-      const sig = signature(vw, excludeRects);
+      const sig = signature(vw, window.innerHeight, excludeRects);
       if (sig === lastSignature.current) return;
       lastSignature.current = sig;
 
+      // A real viewport-width change reshuffles everything (the whole layout changed); a
+      // same-width change (e.g. an accordion expanding/collapsing) only adds or trims points
+      // at the edges so already-visible icons don't jump around.
+      const widthChanged = vw !== lastWidth.current;
+      lastWidth.current = vw;
+
       setWidth(vw);
-      setPoints(generatePoints(vw, minY, maxY, pool, excludeRects));
+      setPoints((prev) => generatePoints(vw, minY, maxY, pool, excludeRects, widthChanged ? [] : prev));
     }
 
     regenerate();
 
-    const observer = new ResizeObserver(() => regenerate());
+    let contentResizeTimer: ReturnType<typeof setTimeout>;
+    const observer = new ResizeObserver(() => {
+      clearTimeout(contentResizeTimer);
+      contentResizeTimer = setTimeout(regenerate, 150);
+    });
     const contentEl = document.getElementById(CONTENT_END_ID);
     observer.observe(contentEl ?? document.body);
 
@@ -148,6 +174,7 @@ export function PageIconFill({ pool, clusterBounds }: { pool: string[]; clusterB
     window.addEventListener("resize", onResize);
 
     return () => {
+      clearTimeout(contentResizeTimer);
       observer.disconnect();
       window.removeEventListener("resize", onResize);
       clearTimeout(resizeTimer);

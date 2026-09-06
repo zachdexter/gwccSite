@@ -27,6 +27,7 @@ const drawerLinks = [
   { href: "/comp", label: "Competitive Team" },
   { href: "/eboard", label: "Eboard" },
   { href: "/gallery", label: "Gallery" },
+  { href: "/faq", label: "FAQ" },
   { href: "/contact", label: "Get Involved" },
 ];
 
@@ -36,11 +37,13 @@ export function NavLinks() {
   const isComp = pathname === "/comp";
   const isGallery = pathname.startsWith("/gallery");
   const isEboard = pathname === "/eboard";
+  const isFaq = pathname === "/faq";
   const isContact = pathname === "/contact";
   const activeByHref: Record<string, boolean> = {
     "/comp": isComp,
     "/eboard": isEboard,
     "/gallery": isGallery,
+    "/faq": isFaq,
     "/contact": isContact,
   };
 
@@ -55,6 +58,9 @@ export function NavLinks() {
         </Link>
         <Link href="/gallery" className={`${chipBase} ${isGallery ? chipActive : chipInactive}`}>
           Gallery
+        </Link>
+        <Link href="/faq" className={`${chipBase} ${isFaq ? chipActive : chipInactive}`}>
+          FAQ
         </Link>
         <Link href="/contact" className={`${chipBase} ${isContact ? chipActive : chipInactive}`}>
           Get Involved

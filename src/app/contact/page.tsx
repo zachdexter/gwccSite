@@ -49,11 +49,11 @@ export default function ContactPage() {
 
           <section className="border-t border-border pt-10 text-center">
             <div className="font-heading text-gwcc-gold/70 text-sm uppercase tracking-[0.25em] mb-3">
-              Partnerships &amp; Inquiries
+              Say Hello
             </div>
             <p className="text-muted-foreground mb-6">
-              Brands, sponsors, and other organizations can reach us directly using the form
-              below.
+              Whether you&apos;re curious about joining, have a random question, or represent a
+              brand looking to team up, we&apos;d love to hear from you.
             </p>
             <ContactForm />
           </section>
