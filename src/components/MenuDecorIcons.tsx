@@ -9,16 +9,20 @@ import type { DecorIcon } from "@/lib/decorBounds";
 // clamp() still keeps them from spilling past the actual live edge. Paste output from
 // /dev/scatter-menu here.
 const menuIcons: DecorIcon[] = [
-  { src: "/navysvgs/star1.svg", left: 166.7, top: 247.1, size: 32 },
-  { src: "/navysvgs/star18.svg", left: 121.9, top: 189.0, size: 32 },
-  { src: "/navysvgs/star5.svg", left: 117.1, top: 132.3, size: 32 },
-  { src: "/navysvgs/star20.svg", left: 220.5, top: 70.0, size: 32 },
-  { src: "/navysvgs/hold6.svg", left: 246.1, top: 322.0, size: 32, rotate: -37 },
-  { src: "/navysvgs/star13.svg", left: 243.5, top: 634.9, size: 32 },
-  { src: "/whitesvgs/star18.svg", left: 108.5, top: 487.9, size: 32 },
-  { src: "/whitesvgs/hold8.svg", left: 219.5, top: 452.9, size: 32 },
-  { src: "/whitesvgs/hold1.svg", left: 36.5, top: 644.7, size: 32 },
-  { src: "/whitesvgs/chalkbag.svg", left: 63.7, top: 374.5, size: 44 },
+  { src: "/navysvgs/star12.svg", left: 125.2, top: 194.4, size: 40 },
+  { src: "/navysvgs/star18.svg", left: 97.2, top: 250.1, size: 40 },
+  { src: "/navysvgs/star7.svg", left: 179.1, top: 309.9, size: 40 },
+  { src: "/navysvgs/star14.svg", left: 135.2, top: 131.1, size: 40 },
+  { src: "/navysvgs/star10.svg", left: 229.8, top: 65.8, size: 40 },
+  { src: "/whitesvgs/curlyhairdude.svg", left: 227.5, top: 389.2, size: 63, rotate: 12 },
+  { src: "/navysvgs/chalkbag.svg", left: 57.1, top: 503.8, size: 42, rotate: -18 },
+  { src: "/navysvgs/carabiner.svg", left: 188.0, top: 466.7, size: 32, rotate: 63 },
+  { src: "/navysvgs/climbstar.svg", left: 263.4, top: 546.0, size: 60, rotate: -34 },
+  { src: "/navysvgs/hold1.svg", left: 69.6, top: 416.6, size: 32, rotate: 105 },
+  { src: "/whitesvgs/hold4.svg", left: 261.9, top: 221.4, size: 32, rotate: 64 },
+  { src: "/whitesvgs/star10.svg", left: 243.9, top: 674.0, size: 32 },
+  { src: "/whitesvgs/sclip.svg", left: 133.0, top: 564.2, size: 32 },
+  { src: "/whitesvgs/star12.svg", left: 39.1, top: 649.0, size: 32 },
 ];
 
 export function MenuDecorIcons() {

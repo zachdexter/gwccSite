@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { SN_Pro, Bebas_Neue, Oswald } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "next-themes";
 import { Analytics } from "@vercel/analytics/next";
 
 const snPro = SN_Pro({
@@ -39,19 +38,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${snPro.variable} ${bebasNeue.variable} ${oswald.variable} h-full antialiased`}
-      suppressHydrationWarning
+      className={`${snPro.variable} ${bebasNeue.variable} ${oswald.variable} h-full antialiased dark`}
+      style={{ colorScheme: "dark" }}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          forcedTheme="dark"
-          disableTransitionOnChange
-        >
-          {children}
-          <Toaster />
-        </ThemeProvider>
+        {children}
+        <Toaster />
         <Analytics />
       </body>
     </html>
