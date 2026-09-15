@@ -15,6 +15,7 @@ npm run lint         # Run ESLint
 npm run db:push      # Apply schema changes to Neon (uses .env.local)
 npm run db:studio    # Open Drizzle Studio UI
 npm run db:seed      # Seed initial admin accounts from PRESIDENT_PASS/EBOARD_PASS
+npm run db:seed-links # Seed the known external links (waitlist, email list, socials) — idempotent
 ```
 
 ## Environment Variables (.env.local)
@@ -50,7 +51,7 @@ This is the admin site for the GW Climbing Club. Public pages are server-rendere
 ### Database
 
 - **Drizzle ORM** + **Neon Postgres** (HTTP client via `@neondatabase/serverless`)
-- Schema: `src/lib/db/schema.ts` — 6 tables: `members`, `semesters`, `attendanceLogs`, `compMembers`, `galleryPhotos`, `accounts`
+- Schema: `src/lib/db/schema.ts` — includes `members`, `semesters`, `attendanceLogs`, `compMembers`, `galleryPhotos`, `accounts`, `faqQuestions`, `externalLinks`, and others
 - DB instance: lazy singleton via Proxy in `src/lib/db/index.ts` — initialize on first use, not at import time
 - Workflow: edit schema → `npm run db:push` → query via the singleton
 
@@ -77,6 +78,10 @@ All photos (gallery + comp team headshots) are hosted on **Cloudinary**. The gal
 ### Contact Form
 
 `/contact` renders `ContactForm` (`src/components/ContactForm.tsx`), which POSTs to `src/app/api/contact/route.ts`. That route sends an email via **Resend** to `siteConfig.contactEmail` (`src/config/site.ts`) with the visitor's address as `replyTo`. The email address is intentionally kept out of the public page's HTML (no `mailto:` link) to avoid scrapers — it only ever appears server-side.
+
+### External Links
+
+Outbound URLs that change over time (subsidized-membership waitlist form, email-list signup, Instagram, Linktree) are stored in the `externalLinks` table, not hardcoded. Each has a stable `key` (`waitlist`, `email-list`, `instagram`, `linktree`) so pages can look them up via `getLink`/`getLinks` in `src/lib/db/links.ts`. `/admin/links` (`src/app/api/links/route.ts`) only supports editing a link's label/URL/description/active state — there's no add or delete in the UI, since every link is wired to a specific code lookup and a stray row would just be dead data. To wire in a new link, add its key to `LINK_KEYS` in `src/lib/db/links.ts`, add a row for it in `scripts/seed-links.ts`, and run `npm run db:seed-links`.
 
 ### Styling
 

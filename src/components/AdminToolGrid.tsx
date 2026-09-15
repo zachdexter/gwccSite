@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardCheck, Users, Images, Trophy, Settings, Clock, Star, Megaphone, HelpCircle, LogOut } from "lucide-react";
+import { ClipboardCheck, Users, Images, Trophy, Settings, Clock, Star, Megaphone, HelpCircle, LogOut, Link as LinkIcon } from "lucide-react";
 import { useAdminRole } from "@/components/AdminRoleContext";
 import { signOut } from "next-auth/react";
 
@@ -53,6 +53,12 @@ const tools = [
     label: "FAQ",
     description: "Manage FAQ questions",
     icon: HelpCircle,
+  },
+  {
+    href: "/admin/links",
+    label: "Links",
+    description: "Manage external links",
+    icon: LinkIcon,
   },
 ];
 

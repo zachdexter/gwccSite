@@ -126,6 +126,17 @@ export const faqQuestions = pgTable("faq_questions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const externalLinks = pgTable("external_links", {
+  id: serial("id").primaryKey(),
+  key: text("key").unique(),
+  label: text("label").notNull(),
+  url: text("url").notNull(),
+  description: text("description"),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const alerts = pgTable("alerts", {
   id: serial("id").primaryKey(),
   message: text("message").notNull(),
@@ -151,4 +162,5 @@ export type PracticeTime = typeof practiceTimes.$inferSelect;
 export type EboardMember = typeof eboardMembers.$inferSelect;
 export type FaqQuestion = typeof faqQuestions.$inferSelect;
 export type Alert = typeof alerts.$inferSelect;
+export type ExternalLink = typeof externalLinks.$inferSelect;
 export type SubsidyChange = typeof subsidyChanges.$inferSelect;

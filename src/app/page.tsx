@@ -5,6 +5,7 @@ import { galleryPhotos, practiceTimes } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
 import { sortPracticeTimes } from "@/lib/practiceTimes";
 import { siteConfig } from "@/config/site";
+import { getLink } from "@/lib/db/links";
 import { PageTransition } from "@/components/PageTransition";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { HeroContent } from "@/components/HeroContent";
@@ -31,6 +32,7 @@ export default async function HomePage() {
     .orderBy(asc(galleryPhotos.heroDisplayOrder));
 
   const schedule = sortPracticeTimes(await db.select().from(practiceTimes));
+  const linktreeUrl = await getLink("linktree");
 
   const practiceScheduleItems = schedule.map((t) => ({
     day: t.day,
@@ -81,14 +83,16 @@ export default async function HomePage() {
               Login
             </Link>
           </span>
-          <a
-            href={siteConfig.socials.linktree}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors"
-          >
-            Linktree
-          </a>
+          {linktreeUrl && (
+            <a
+              href={linktreeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors"
+            >
+              Linktree
+            </a>
+          )}
         </footer>
       </div>
     </PageTransition>

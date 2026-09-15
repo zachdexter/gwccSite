@@ -1,9 +1,11 @@
 import Link from "next/link";
-import { siteConfig } from "@/config/site";
+import { getLink } from "@/lib/db/links";
 import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
 
-export default function MembershipPage() {
+export default async function MembershipPage() {
+  const waitlistUrl = await getLink("waitlist");
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex flex-col">
@@ -18,14 +20,18 @@ export default function MembershipPage() {
               We&apos;re excited to be able to offer a subsidized membership to 30-40 members
               each year! Come to orientation days at the beginning of the school year to be
               considered — if you missed them or couldn&apos;t make it, no worries, just join our{" "}
-              <a
-                href={siteConfig.waitlistUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gwcc-gold hover:underline"
-              >
-                waitlist
-              </a>{" "}
+              {waitlistUrl ? (
+                <a
+                  href={waitlistUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gwcc-gold hover:underline"
+                >
+                  waitlist
+                </a>
+              ) : (
+                <span className="text-gwcc-gold">waitlist</span>
+              )}{" "}
               and we&apos;ll reach out. To keep your subsidy, we ask that you make it to two
               sessions a week; if that&apos;s tough on a regular basis, we may pass the spot
               along to someone who can use it more.

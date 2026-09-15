@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { siteConfig } from "@/config/site";
+import { getLinks } from "@/lib/db/links";
 import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ContactForm } from "@/components/ContactForm";
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const { instagram, "email-list": emailListUrl } = await getLinks(["instagram", "email-list"]);
+
   return (
     <PageTransition>
       <div className="min-h-screen bg-background flex flex-col">
@@ -25,23 +27,31 @@ export default function ContactPage() {
                 click here
               </Link>
               . Be sure to follow our{" "}
-              <a
-                href={siteConfig.socials.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gwcc-gold hover:underline"
-              >
-                Instagram
-              </a>{" "}
+              {instagram ? (
+                <a
+                  href={instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gwcc-gold hover:underline"
+                >
+                  Instagram
+                </a>
+              ) : (
+                <span className="text-gwcc-gold">Instagram</span>
+              )}{" "}
               or join our{" "}
-              <a
-                href={siteConfig.emailListUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gwcc-gold hover:underline"
-              >
-                email list
-              </a>{" "}
+              {emailListUrl ? (
+                <a
+                  href={emailListUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-gwcc-gold hover:underline"
+                >
+                  email list
+                </a>
+              ) : (
+                <span className="text-gwcc-gold">email list</span>
+              )}{" "}
               as those are the best methods to stay up to date with what we&apos;re up to and
               find out about events!
             </p>
