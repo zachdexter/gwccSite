@@ -1,14 +1,33 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { motion, type PanInfo } from "framer-motion";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { motion, useMotionValue, animate, type PanInfo } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 type Photo = { id: number; secureUrl: string };
 
+const SPRING = { type: "spring", stiffness: 300, damping: 30 } as const;
+
 export function MemberPhotoCarousel({ photos, name }: { photos: Photo[]; name: string }) {
   const [index, setIndex] = useState(0);
+  const [width, setWidth] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    setWidth(el.offsetWidth);
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!width) return;
+    const controls = animate(x, -index * width, SPRING);
+    return () => controls.stop();
+  }, [index, width, x]);
 
   if (photos.length === 0) {
     return (
@@ -30,22 +49,25 @@ export function MemberPhotoCarousel({ photos, name }: { photos: Photo[]; name: s
   }
 
   function handleDragEnd(_: unknown, info: PanInfo) {
-    const width = containerRef.current?.offsetWidth ?? 1;
-    const offsetRatio = info.offset.x / width;
-    if (offsetRatio < -0.2 || info.velocity.x < -500) goTo(index + 1);
-    else if (offsetRatio > 0.2 || info.velocity.x > 500) goTo(index - 1);
+    const offsetRatio = width ? info.offset.x / width : 0;
+    let target = index;
+    if (offsetRatio < -0.2 || info.velocity.x < -500) target = index + 1;
+    else if (offsetRatio > 0.2 || info.velocity.x > 500) target = index - 1;
+    target = Math.max(0, Math.min(photos.length - 1, target));
+
+    if (target !== index) setIndex(target);
+    else animate(x, -index * width, SPRING);
   }
 
   return (
     <div ref={containerRef} className="relative w-full aspect-square overflow-hidden group">
       <motion.div
         className="flex h-full"
+        style={{ x }}
         drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
+        dragConstraints={{ left: -(photos.length - 1) * width, right: 0 }}
         dragElastic={0.15}
         onDragEnd={handleDragEnd}
-        animate={{ x: `${-index * 100}%` }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
         {photos.map((p) => (
           // eslint-disable-next-line @next/next/no-img-element
