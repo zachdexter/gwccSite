@@ -17,8 +17,11 @@ export function MemberPhotoCarousel({ photos, name }: { photos: Photo[]; name: s
   useLayoutEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    setWidth(el.offsetWidth);
-    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    if (el.offsetWidth > 0) setWidth(el.offsetWidth);
+    const observer = new ResizeObserver(([entry]) => {
+      // Mobile browsers can report a spurious 0 width mid-scroll/touch; ignore those.
+      if (entry.contentRect.width > 0) setWidth(entry.contentRect.width);
+    });
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
@@ -65,7 +68,7 @@ export function MemberPhotoCarousel({ photos, name }: { photos: Photo[]; name: s
         className="flex h-full"
         style={{ x }}
         drag="x"
-        dragConstraints={{ left: -(photos.length - 1) * width, right: 0 }}
+        dragConstraints={containerRef}
         dragElastic={0.15}
         onDragEnd={handleDragEnd}
       >
