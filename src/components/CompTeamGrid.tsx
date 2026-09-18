@@ -1,13 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { MemberPhotoCarousel } from "@/components/MemberPhotoCarousel";
+import { BioText } from "@/components/BioText";
 
 type CompMember = {
   id: number;
   name: string;
   year: string;
   bio: string | null;
-  headshotUrl: string | null;
+  photos: { id: number; secureUrl: string }[];
 };
 
 const container = {
@@ -35,25 +37,14 @@ export function CompTeamGrid({ members }: { members: CompMember[] }) {
           variants={item}
           className="bg-card border border-border rounded-xl overflow-hidden shadow-[0_25px_50px_-12px_rgba(0,0,0,0.9)] ring-1 ring-white/10"
         >
-          {m.headshotUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={m.headshotUrl}
-              alt={m.name}
-              className="w-full aspect-square object-cover object-top"
-            />
-          ) : (
-            <div className="w-full aspect-square bg-muted flex items-center justify-center">
-              <span className="text-muted-foreground text-4xl font-bold">{m.name[0]}</span>
-            </div>
-          )}
+          <MemberPhotoCarousel photos={m.photos} name={m.name} />
           <div className="p-4 space-y-2">
             <div className="flex items-baseline gap-2">
               <h2 className="text-card-foreground font-semibold">{m.name}</h2>
               <span className="text-muted-foreground text-xs">{m.year}</span>
             </div>
             {m.bio && (
-              <p className="text-muted-foreground text-sm leading-relaxed">{m.bio}</p>
+              <BioText text={m.bio} className="text-muted-foreground text-sm leading-relaxed" />
             )}
           </div>
         </motion.div>

@@ -1,6 +1,4 @@
-import { db } from "@/lib/db";
-import { compMembers } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { getCompMembers } from "@/lib/db/comp";
 import { PageTransition } from "@/components/PageTransition";
 import { CompTeamGrid } from "@/components/CompTeamGrid";
 import { SiteHeader } from "@/components/SiteHeader";
@@ -9,11 +7,7 @@ import { CompHeaderIcons, CompDecorFill } from "@/components/CompDecorIcons";
 export const dynamic = "force-dynamic";
 
 export default async function CompPage() {
-  const members = await db
-    .select()
-    .from(compMembers)
-    .where(eq(compMembers.isActive, true))
-    .orderBy(compMembers.displayOrder, compMembers.name);
+  const members = await getCompMembers({ activeOnly: true });
 
   return (
     <PageTransition>

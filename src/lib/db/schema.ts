@@ -57,9 +57,19 @@ export const compMembers = pgTable("comp_members", {
   year: text("year").notNull(),
   events: text("events").array().notNull().default([]),
   bio: text("bio"),
-  headshotUrl: text("headshot_url"),
   displayOrder: integer("display_order").notNull().default(0),
   isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const compMemberPhotos = pgTable("comp_member_photos", {
+  id: serial("id").primaryKey(),
+  memberId: integer("member_id")
+    .notNull()
+    .references(() => compMembers.id, { onDelete: "cascade" }),
+  cloudinaryId: text("cloudinary_id").notNull(),
+  secureUrl: text("secure_url").notNull(),
+  displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -155,6 +165,7 @@ export type Member = typeof members.$inferSelect;
 export type Semester = typeof semesters.$inferSelect;
 export type AttendanceLog = typeof attendanceLogs.$inferSelect;
 export type CompMember = typeof compMembers.$inferSelect;
+export type CompMemberPhoto = typeof compMemberPhotos.$inferSelect;
 export type GalleryAlbum = typeof galleryAlbums.$inferSelect;
 export type GalleryPhoto = typeof galleryPhotos.$inferSelect;
 export type HeroPhoto = typeof heroPhotos.$inferSelect;

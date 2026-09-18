@@ -13,10 +13,10 @@ export async function POST(req: Request) {
   const buffer = Buffer.from(await file.arrayBuffer());
 
   try {
-    const { secure_url } = await uploadToCloudinary(buffer, "gwcc/comp-headshots", file.name);
-    return NextResponse.json({ secureUrl: secure_url });
+    const { public_id, secure_url } = await uploadToCloudinary(buffer, "gwcc/comp-photos", file.name);
+    return NextResponse.json({ secureUrl: secure_url, cloudinaryId: public_id });
   } catch (err) {
-    console.error("[comp/headshot:POST]", err);
-    return NextResponse.json({ error: "Failed to upload headshot." }, { status: 500 });
+    console.error("[comp/photo:POST]", err);
+    return NextResponse.json({ error: "Failed to upload photo." }, { status: 500 });
   }
 }

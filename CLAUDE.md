@@ -51,7 +51,7 @@ This is the admin site for the GW Climbing Club. Public pages are server-rendere
 ### Database
 
 - **Drizzle ORM** + **Neon Postgres** (HTTP client via `@neondatabase/serverless`)
-- Schema: `src/lib/db/schema.ts` — includes `members`, `semesters`, `attendanceLogs`, `compMembers`, `galleryPhotos`, `accounts`, `faqQuestions`, `externalLinks`, and others
+- Schema: `src/lib/db/schema.ts` — includes `members`, `semesters`, `attendanceLogs`, `compMembers`, `compMemberPhotos`, `galleryPhotos`, `accounts`, `faqQuestions`, `externalLinks`, and others
 - DB instance: lazy singleton via Proxy in `src/lib/db/index.ts` — initialize on first use, not at import time
 - Workflow: edit schema → `npm run db:push` → query via the singleton
 
@@ -73,7 +73,11 @@ Week/attendance calculation utilities live in `src/lib/semester.ts`.
 
 ### Images
 
-All photos (gallery + comp team headshots) are hosted on **Cloudinary**. The gallery API uploads to Cloudinary and stores the `publicId` + `secureUrl` in the DB. Deletion removes from both. Cloudinary helpers are in `src/lib/cloudinary.ts`.
+All photos (gallery + comp team photos) are hosted on **Cloudinary**. The gallery API uploads to Cloudinary and stores the `publicId` + `secureUrl` in the DB. Deletion removes from both. Cloudinary helpers are in `src/lib/cloudinary.ts`.
+
+### Comp Team Photos
+
+Each `compMembers` row has zero or more photos in `compMemberPhotos` (one-to-many, `memberId` FK cascade-deletes with the member), rendered as a swipeable carousel on `/comp` (`src/components/MemberPhotoCarousel.tsx` — manual navigation only, no autoplay) and managed per-member in `/admin/comp` with no cap on count. `src/lib/db/comp.ts`'s `getCompMembers()` is the shared query helper (used by both the public page and the admin `GET`) that joins members with their ordered photos in two queries (no N+1). Uploads go through `POST /api/comp/photo` (one file at a time, returns `{secureUrl, cloudinaryId}`); saving a member's final photo set — adds, removals (+ Cloudinary cleanup), and reordering — goes through a single `PUT /api/comp/photos` call that reconciles the whole ordered list at once.
 
 ### Contact Form
 

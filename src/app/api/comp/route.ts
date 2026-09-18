@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { compMembers } from "@/lib/db/schema";
+import { getCompMembers } from "@/lib/db/comp";
 import { pick } from "@/lib/pick";
-import { deleteFromCloudinary, getPublicIdFromUrl } from "@/lib/cloudinary";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -11,19 +11,13 @@ const EDITABLE_FIELDS = [
   "year",
   "events",
   "bio",
-  "headshotUrl",
   "displayOrder",
   "isActive",
 ] as const;
 
 export async function GET() {
   try {
-    const all = await db
-      .select()
-      .from(compMembers)
-      .where(eq(compMembers.isActive, true))
-      .orderBy(compMembers.displayOrder, compMembers.name);
-
+    const all = await getCompMembers({ activeOnly: true });
     return NextResponse.json(all);
   } catch (err) {
     console.error("[comp:GET]", err);
@@ -40,7 +34,7 @@ export async function POST(req: Request) {
 
   try {
     const [member] = await db.insert(compMembers).values(values).returning();
-    return NextResponse.json(member, { status: 201 });
+    return NextResponse.json({ ...member, photos: [] }, { status: 201 });
   } catch (err) {
     console.error("[comp:POST]", err);
     return NextResponse.json({ error: "Failed to create comp member." }, { status: 500 });
@@ -58,31 +52,11 @@ export async function PATCH(req: Request) {
   const updates = pick(body, EDITABLE_FIELDS);
 
   try {
-    let previousHeadshotUrl: string | null = null;
-    if (updates.headshotUrl !== undefined) {
-      const [existing] = await db
-        .select({ headshotUrl: compMembers.headshotUrl })
-        .from(compMembers)
-        .where(eq(compMembers.id, id));
-      if (existing && existing.headshotUrl && existing.headshotUrl !== updates.headshotUrl) {
-        previousHeadshotUrl = existing.headshotUrl;
-      }
-    }
-
     const [updated] = await db
       .update(compMembers)
       .set(updates)
       .where(eq(compMembers.id, id))
       .returning();
-
-    if (previousHeadshotUrl) {
-      const publicId = getPublicIdFromUrl(previousHeadshotUrl);
-      if (publicId) {
-        deleteFromCloudinary(publicId).catch((err) =>
-          console.error("[comp] Failed to delete old headshot from Cloudinary", err)
-        );
-      }
-    }
 
     return NextResponse.json(updated);
   } catch (err) {

@@ -4,20 +4,37 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useConfirm } from "@/components/useConfirm";
 import { ImageCropDialog } from "@/components/ImageCropDialog";
 import { ReorderableList } from "@/components/ReorderableList";
+import { PhotoReorderStrip } from "@/components/PhotoReorderStrip";
+import { BioText } from "@/components/BioText";
 import { toast } from "sonner";
+
+type CompMemberPhoto = { id: number; secureUrl: string; cloudinaryId: string; displayOrder: number };
 
 type CompMember = {
   id: number;
   name: string;
   year: string;
   bio: string | null;
-  headshotUrl: string | null;
   displayOrder: number;
   isActive: boolean;
+  photos: CompMemberPhoto[];
 };
+
+type PendingPhoto =
+  | { kind: "existing"; id: number; secureUrl: string; cloudinaryId: string }
+  | { kind: "new"; tempId: string; file: File; previewUrl: string };
+
+function keyOf(p: PendingPhoto): string {
+  return p.kind === "existing" ? String(p.id) : p.tempId;
+}
+
+function previewOf(p: PendingPhoto): string {
+  return p.kind === "existing" ? p.secureUrl : p.previewUrl;
+}
 
 const YEARS = ["Fr", "So", "Jr", "Sr", "Alumni"];
 
@@ -29,13 +46,29 @@ export default function CompAdminPage() {
   const [form, setForm] = useState({
     name: "", year: "Fr", bio: "",
   });
-  const [headshotFile, setHeadshotFile] = useState<File | null>(null);
-  const [headshotPreview, setHeadshotPreview] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<PendingPhoto[]>([]);
   const [cropSource, setCropSource] = useState<File | null>(null);
   const [cropDialogOpen, setCropDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const bioRef = useRef<HTMLTextAreaElement>(null);
   const { confirm, ConfirmDialog } = useConfirm();
+
+  function boldSelection() {
+    const el = bioRef.current;
+    if (!el) return;
+    const { selectionStart, selectionEnd, value } = el;
+    if (selectionStart === selectionEnd) return;
+    const newValue =
+      value.slice(0, selectionStart) +
+      `**${value.slice(selectionStart, selectionEnd)}**` +
+      value.slice(selectionEnd);
+    setForm((f) => ({ ...f, bio: newValue }));
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(selectionStart + 2, selectionEnd + 2);
+    });
+  }
 
   useEffect(() => {
     async function fetchMembers() {
@@ -48,70 +81,106 @@ export default function CompAdminPage() {
 
   function resetForm() {
     setForm({ name: "", year: "Fr", bio: "" });
-    setHeadshotFile(null);
-    if (headshotPreview) URL.revokeObjectURL(headshotPreview);
-    setHeadshotPreview(null);
+    for (const p of photos) if (p.kind === "new") URL.revokeObjectURL(p.previewUrl);
+    setPhotos([]);
     setCropSource(null);
     setEditing(null);
     setShowAdd(false);
   }
 
   function onCropped(file: File) {
-    setHeadshotFile(file);
-    if (headshotPreview) URL.revokeObjectURL(headshotPreview);
-    setHeadshotPreview(URL.createObjectURL(file));
+    setPhotos((prev) => [
+      ...prev,
+      { kind: "new", tempId: crypto.randomUUID(), file, previewUrl: URL.createObjectURL(file) },
+    ]);
   }
 
-  async function uploadHeadshot(file: File): Promise<string | null> {
+  function removePhoto(key: string) {
+    setPhotos((prev) => {
+      const target = prev.find((p) => keyOf(p) === key);
+      if (target?.kind === "new") URL.revokeObjectURL(target.previewUrl);
+      return prev.filter((p) => keyOf(p) !== key);
+    });
+  }
+
+  async function uploadPhoto(file: File): Promise<{ secureUrl: string; cloudinaryId: string } | null> {
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/comp/headshot", { method: "POST", body: formData });
+    const res = await fetch("/api/comp/photo", { method: "POST", body: formData });
     if (!res.ok) {
-      toast.error("Failed to upload headshot");
+      toast.error("Failed to upload a photo");
       return null;
     }
-    const { secureUrl } = await res.json();
-    return secureUrl;
+    return res.json();
   }
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
 
-    let headshotUrl = editing?.headshotUrl ?? null;
-    if (headshotFile) {
-      const uploaded = await uploadHeadshot(headshotFile);
-      if (uploaded) headshotUrl = uploaded;
-    }
+    try {
+      let memberId: number;
+      let baseMember: Omit<CompMember, "photos">;
 
-    const payload = editing ? { ...form, headshotUrl } : { ...form, headshotUrl, displayOrder: members.length };
+      if (editing) {
+        const res = await fetch("/api/comp", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editing.id, ...form }),
+        });
+        if (!res.ok) {
+          toast.error("Failed to update member");
+          return;
+        }
+        baseMember = await res.json();
+        memberId = editing.id;
+      } else {
+        const res = await fetch("/api/comp", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...form, displayOrder: members.length }),
+        });
+        if (!res.ok) {
+          toast.error("Failed to add member");
+          return;
+        }
+        baseMember = await res.json();
+        memberId = baseMember.id;
+      }
 
-    if (editing) {
-      const res = await fetch("/api/comp", {
-        method: "PATCH",
+      const uploaded = await Promise.all(
+        photos.map(async (p) => {
+          if (p.kind === "existing") return { id: p.id, cloudinaryId: p.cloudinaryId, secureUrl: p.secureUrl };
+          const result = await uploadPhoto(p.file);
+          return result ? { cloudinaryId: result.cloudinaryId, secureUrl: result.secureUrl } : null;
+        })
+      );
+      const validPhotos = uploaded.filter((p): p is NonNullable<typeof p> => p !== null);
+      if (validPhotos.length !== photos.length) {
+        toast.error("Some photos failed to upload and were skipped");
+      }
+
+      const photosRes = await fetch("/api/comp/photos", {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: editing.id, ...payload }),
+        body: JSON.stringify({ memberId, photos: validPhotos }),
       });
-      if (res.ok) {
-        const updated = await res.json();
-        setMembers((prev) => prev.map((m) => (m.id === editing.id ? updated : m)));
+      const finalPhotos: CompMemberPhoto[] = photosRes.ok ? (await photosRes.json()).photos : [];
+
+      const finalMember: CompMember = { ...baseMember, photos: finalPhotos };
+
+      if (editing) {
+        setMembers((prev) => prev.map((m) => (m.id === memberId ? finalMember : m)));
         toast.success("Updated");
+      } else {
+        setMembers((prev) => [...prev, finalMember]);
+        toast.success(`Added ${finalMember.name}`);
       }
-    } else {
-      const res = await fetch("/api/comp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (res.ok) {
-        const m = await res.json();
-        setMembers((prev) => [...prev, m]);
-        toast.success(`Added ${m.name}`);
-      }
-    }
 
-    resetForm();
-    setSaving(false);
+      resetForm();
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function deactivate(id: number, name: string) {
@@ -130,6 +199,7 @@ export default function CompAdminPage() {
   function startEdit(m: CompMember) {
     setEditing(m);
     setForm({ name: m.name, year: m.year, bio: m.bio ?? "" });
+    setPhotos(m.photos.map((p) => ({ kind: "existing", id: p.id, secureUrl: p.secureUrl, cloudinaryId: p.cloudinaryId })));
     setShowAdd(true);
   }
 
@@ -194,15 +264,34 @@ export default function CompAdminPage() {
           </div>
           <div className="space-y-1">
             <Label className="text-muted-foreground text-xs">Bio</Label>
-            <textarea
+            <div className="flex items-center gap-1 pb-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                onClick={boldSelection}
+                title="Bold the selected words"
+                className="font-bold"
+              >
+                B
+              </Button>
+              <span className="text-muted-foreground text-[11px]">
+                Select text and click B to bold just those words. Enter makes a new line.
+              </span>
+            </div>
+            <Textarea
+              ref={bioRef}
               value={form.bio}
               onChange={(e) => setForm({ ...form, bio: e.target.value })}
               rows={3}
-              className="w-full px-3 py-2 rounded-md bg-muted border border-border text-foreground text-sm resize-none"
+              className="bg-muted border-border text-foreground"
             />
+            {form.bio && (
+              <BioText text={form.bio} className="text-muted-foreground text-sm leading-relaxed pt-2" />
+            )}
           </div>
-          <div className="space-y-1">
-            <Label className="text-muted-foreground text-xs">Headshot (optional)</Label>
+          <div className="space-y-2">
+            <Label className="text-muted-foreground text-xs">Photos</Label>
             <input
               ref={fileRef}
               type="file"
@@ -217,20 +306,40 @@ export default function CompAdminPage() {
               }}
               className="hidden"
             />
-            <div className="flex items-center gap-2">
-              {headshotPreview && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={headshotPreview} alt="" className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
-              )}
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => fileRef.current?.click()}
-                className="flex-1 justify-start font-normal text-foreground"
-              >
-                {headshotFile ? "Change photo…" : "Choose file…"}
-              </Button>
-            </div>
+            {photos.length > 0 && (
+              <PhotoReorderStrip
+                items={photos.map((p) => ({ key: keyOf(p), previewUrl: previewOf(p) }))}
+                onReorder={(newOrder) => {
+                  setPhotos(newOrder.map((item) => photos.find((p) => keyOf(p) === item.key)!));
+                }}
+                renderItem={(item) => (
+                  <div className="relative w-16 h-16 rounded-md overflow-hidden border border-border">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={item.previewUrl} alt="" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onPointerDown={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removePhoto(item.key);
+                      }}
+                      aria-label="Remove photo"
+                      className="absolute top-0.5 right-0.5 bg-black/60 hover:bg-black/80 text-white rounded-full w-4 h-4 flex items-center justify-center text-xs leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+              />
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => fileRef.current?.click()}
+              className="justify-start font-normal text-foreground"
+            >
+              + Add Photo
+            </Button>
           </div>
           <div className="flex gap-2">
             <Button type="submit" disabled={saving} className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90">
@@ -252,9 +361,9 @@ export default function CompAdminPage() {
             onReorder={handleReorder}
             renderItem={(m) => (
               <div className="flex items-center gap-4 bg-card border border-border rounded-lg px-4 py-3">
-                {m.headshotUrl ? (
+                {m.photos[0] ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={m.headshotUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
+                  <img src={m.photos[0].secureUrl} alt={m.name} className="w-10 h-10 rounded-full object-cover flex-shrink-0" />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-muted border border-border flex-shrink-0" />
                 )}
