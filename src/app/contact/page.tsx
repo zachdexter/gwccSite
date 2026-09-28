@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { getLinks } from "@/lib/db/links";
+import { getLink } from "@/lib/db/links";
 import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
 import { ContactForm } from "@/components/ContactForm";
 
 export default async function ContactPage() {
-  const { instagram, "email-list": emailListUrl } = await getLinks(["instagram", "email-list"]);
+  const instagram = await getLink("instagram");
 
   return (
     <PageTransition>
@@ -39,21 +39,8 @@ export default async function ContactPage() {
               ) : (
                 <span className="text-gwcc-gold">Instagram</span>
               )}{" "}
-              or join our{" "}
-              {emailListUrl ? (
-                <a
-                  href={emailListUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-gwcc-gold hover:underline"
-                >
-                  email list
-                </a>
-              ) : (
-                <span className="text-gwcc-gold">email list</span>
-              )}{" "}
-              as those are the best methods to stay up to date with what we&apos;re up to and
-              find out about events!
+              or reach out below to get added to our email list. Both are great ways to stay up
+              to date with what we&apos;re up to and find out about events!
             </p>
           </section>
 

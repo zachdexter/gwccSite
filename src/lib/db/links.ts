@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { externalLinks } from "@/lib/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 
-export const LINK_KEYS = ["waitlist", "email-list", "instagram", "linktree"] as const;
+export const LINK_KEYS = ["instagram", "linktree"] as const;
 export type LinkKey = (typeof LINK_KEYS)[number];
 
 export async function getLinks(keys: LinkKey[]): Promise<Record<string, string | null>> {

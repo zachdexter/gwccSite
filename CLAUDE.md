@@ -15,7 +15,7 @@ npm run lint         # Run ESLint
 npm run db:push      # Apply schema changes to Neon (uses .env.local)
 npm run db:studio    # Open Drizzle Studio UI
 npm run db:seed      # Seed initial admin accounts from PRESIDENT_PASS/EBOARD_PASS
-npm run db:seed-links # Seed the known external links (waitlist, email list, socials) — idempotent
+npm run db:seed-links # Seed the known external links (Instagram, Linktree) — idempotent
 ```
 
 ## Environment Variables (.env.local)
@@ -85,7 +85,7 @@ Each `compMembers` row has zero or more photos in `compMemberPhotos` (one-to-man
 
 ### External Links
 
-Outbound URLs that change over time (subsidized-membership waitlist form, email-list signup, Instagram, Linktree) are stored in the `externalLinks` table, not hardcoded. Each has a stable `key` (`waitlist`, `email-list`, `instagram`, `linktree`) so pages can look them up via `getLink`/`getLinks` in `src/lib/db/links.ts`. `/admin/links` (`src/app/api/links/route.ts`) only supports editing a link's label/URL/description/active state — there's no add or delete in the UI, since every link is wired to a specific code lookup and a stray row would just be dead data. To wire in a new link, add its key to `LINK_KEYS` in `src/lib/db/links.ts`, add a row for it in `scripts/seed-links.ts`, and run `npm run db:seed-links`.
+Outbound URLs that change over time (Instagram, Linktree) are stored in the `externalLinks` table, not hardcoded. Each has a stable `key` (`instagram`, `linktree`) so pages can look them up via `getLink`/`getLinks` in `src/lib/db/links.ts`. `/admin/links` (`src/app/api/links/route.ts`) only supports editing a link's label/URL/description/active state — there's no add or delete in the UI, since every link is wired to a specific code lookup and a stray row would just be dead data. To wire in a new link, add its key to `LINK_KEYS` in `src/lib/db/links.ts`, add a row for it in `scripts/seed-links.ts`, and run `npm run db:seed-links`. The subsidized-membership waitlist page now links to the Linktree instead of a dedicated form (it's kept more current there), so `waitlist` and `email-list` are both retired keys, listed in `RETIRED_KEYS` in `src/app/api/links/route.ts` — their rows still exist in the DB but are filtered out of `/admin/links` and blocked from edits, rather than deleted, since deletion isn't supported for keyed rows.
 
 ### Styling
 

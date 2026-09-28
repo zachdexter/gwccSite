@@ -4,7 +4,7 @@ import { PageTransition } from "@/components/PageTransition";
 import { SiteHeader } from "@/components/SiteHeader";
 
 export default async function MembershipPage() {
-  const waitlistUrl = await getLink("waitlist");
+  const linktreeUrl = await getLink("linktree");
 
   return (
     <PageTransition>
@@ -19,25 +19,26 @@ export default async function MembershipPage() {
             <p className="text-muted-foreground max-w-xl mx-auto mb-4">
               We&apos;re excited to be able to offer a subsidized membership to 30-40 members
               each year! Come to orientation days at the beginning of the school year to be
-              considered — if you missed them or couldn&apos;t make it, no worries, just join our{" "}
-              {waitlistUrl ? (
+              considered. If you missed them or couldn&apos;t make it, no worries. Just join our
+              waitlist through our{" "}
+              {linktreeUrl ? (
                 <a
-                  href={waitlistUrl}
+                  href={linktreeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-gwcc-gold hover:underline"
                 >
-                  waitlist
+                  Linktree
                 </a>
               ) : (
-                <span className="text-gwcc-gold">waitlist</span>
+                <span className="text-gwcc-gold">Linktree</span>
               )}{" "}
               and we&apos;ll reach out. To keep your subsidy, we ask that you make it to two
               sessions a week; if that&apos;s tough on a regular basis, we may pass the spot
               along to someone who can use it more.
             </p>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              Got questions? We&apos;d love to hear from you —{" "}
+              Got questions? We&apos;d love to hear from you, so{" "}
               <Link href="/contact" className="text-gwcc-gold hover:underline">
                 reach out here
               </Link>
