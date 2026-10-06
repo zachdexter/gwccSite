@@ -1,7 +1,12 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { attendanceLogs, members, semesters, subsidyChanges, weekRequirements } from "@/lib/db/schema";
-import { getEffectiveSubsidyStatus, getSemesterWeeks, getWeekRequirement } from "@/lib/semester";
+import {
+  getEffectiveSubsidyStatus,
+  getSemesterEnd,
+  getSemesterWeeks,
+  getWeekRequirement,
+} from "@/lib/semester";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -30,7 +35,11 @@ export async function GET(req: Request) {
     ]);
 
     const weeks = getSemesterWeeks(semester);
-    const semesterStart = new Date(semester.startDate);
+    // Subsidy status as of now for the current semester, or as of the end for a past one,
+    // so changes made mid-semester show up.
+    const now = new Date();
+    const semesterEnd = getSemesterEnd(semester);
+    const subsidyAsOf = now < semesterEnd ? now : semesterEnd;
 
     const memberResults = allMembers.map((member) => {
       const memberLogs = logs.filter((l) => l.memberId === member.id);
@@ -43,7 +52,7 @@ export async function GET(req: Request) {
       return {
         id: member.id,
         name: member.name,
-        isSubsidized: getEffectiveSubsidyStatus(memberChanges, semesterStart),
+        isSubsidized: getEffectiveSubsidyStatus(memberChanges, subsidyAsOf, member.isSubsidized),
         weeklyCounts,
       };
     });

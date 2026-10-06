@@ -99,20 +99,25 @@ export function isDateWithinSemester(
   date: Date = new Date()
 ): boolean {
   const s = parseClubDate(semester.startDate);
-  const e = parseClubDate(semester.endDate);
   const start = zonedTime(s.year, s.month - 1, s.day);
-  const end = zonedTime(e.year, e.month - 1, e.day, 23, 59, 59, 999);
-  return date >= start && date <= end;
+  return date >= start && date <= getSemesterEnd(semester);
+}
+
+// The last instant of the semester's final day, in the club's time zone.
+export function getSemesterEnd(semester: Pick<Semester, "endDate">): Date {
+  const e = parseClubDate(semester.endDate);
+  return zonedTime(e.year, e.month - 1, e.day, 23, 59, 59, 999);
 }
 
 export function getEffectiveSubsidyStatus(
   changes: Pick<SubsidyChange, "isSubsidized" | "changedAt">[],
-  asOf: Date
+  asOf: Date,
+  fallback = false
 ): boolean {
   const applicable = changes
     .filter((c) => new Date(c.changedAt) <= asOf)
     .sort((a, b) => new Date(b.changedAt).getTime() - new Date(a.changedAt).getTime());
-  return applicable[0]?.isSubsidized ?? false;
+  return applicable[0]?.isSubsidized ?? fallback;
 }
 
 export const DEFAULT_WEEKLY_REQUIRED = 2;
