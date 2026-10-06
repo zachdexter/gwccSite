@@ -1,32 +1,90 @@
 import type { Semester, SubsidyChange } from "./db/schema";
 
-export function getWeekBounds(date: Date): { weekStart: Date; weekEnd: Date } {
-  const d = new Date(date);
-  const day = d.getDay(); // 0 = Sunday
-  const weekStart = new Date(d);
-  weekStart.setDate(d.getDate() - day);
-  weekStart.setHours(0, 0, 0, 0);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
+// Weeks are Sunday–Saturday in the club's local time. All week math is pinned to this
+// zone so the server (UTC on Vercel) and the browser agree on where a week starts.
+const CLUB_TIME_ZONE = "America/New_York";
+
+const zoneFormatter = new Intl.DateTimeFormat("en-US", {
+  timeZone: CLUB_TIME_ZONE,
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+  hourCycle: "h23",
+});
+
+// Wall-clock fields of `date` as seen in the club's time zone (month is 1-based).
+function zonedParts(date: Date) {
+  const parts: Record<string, number> = {};
+  for (const p of zoneFormatter.formatToParts(date)) {
+    if (p.type !== "literal") parts[p.type] = Number(p.value);
+  }
+  return parts as { year: number; month: number; day: number; hour: number; minute: number; second: number };
+}
+
+// Milliseconds the club's time zone is ahead of UTC at the given instant.
+function zoneOffset(date: Date): number {
+  const p = zonedParts(date);
+  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  return asUtc - (date.getTime() - date.getUTCMilliseconds());
+}
+
+// The instant at which the club's wall clock reads the given time. Day may overflow
+// (e.g. day 0 or 32) — Date.UTC normalizes it.
+function zonedTime(
+  year: number,
+  monthIndex: number,
+  day: number,
+  hour = 0,
+  minute = 0,
+  second = 0,
+  ms = 0
+): Date {
+  const guess = Date.UTC(year, monthIndex, day, hour, minute, second, ms);
+  const offset = zoneOffset(new Date(guess));
+  let result = guess - offset;
+  // Re-check in case the guess and the result straddle a DST change.
+  const corrected = zoneOffset(new Date(result));
+  if (corrected !== offset) result = guess - corrected;
+  return new Date(result);
+}
+
+// Semester dates are calendar dates ("YYYY-MM-DD"); read them as days in the club's zone.
+function parseClubDate(value: string | Date): { year: number; month: number; day: number } {
+  if (typeof value === "string") {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(value);
+    if (m) return { year: Number(m[1]), month: Number(m[2]), day: Number(m[3]) };
+  }
+  return zonedParts(new Date(value));
+}
+
+function getWeekBoundsForDay(year: number, month: number, day: number) {
+  const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay(); // 0 = Sunday
+  const weekStart = zonedTime(year, month - 1, day - dayOfWeek);
+  const weekEnd = zonedTime(year, month - 1, day - dayOfWeek + 6, 23, 59, 59, 999);
   return { weekStart, weekEnd };
 }
 
+export function getWeekBounds(date: Date): { weekStart: Date; weekEnd: Date } {
+  const { year, month, day } = zonedParts(date);
+  return getWeekBoundsForDay(year, month, day);
+}
+
 export function getSemesterWeeks(
-  semester: Semester
+  semester: Pick<Semester, "startDate" | "endDate">
 ): { weekStart: Date; weekEnd: Date }[] {
-  const start = new Date(semester.startDate);
-  const end = new Date(semester.endDate);
+  const start = parseClubDate(semester.startDate);
+  const end = parseClubDate(semester.endDate);
+  const semesterEnd = zonedTime(end.year, end.month - 1, end.day, 23, 59, 59, 999);
   const weeks: { weekStart: Date; weekEnd: Date }[] = [];
 
-  const { weekStart: firstSunday } = getWeekBounds(start);
-  let current = new Date(firstSunday);
-
-  while (current <= end) {
-    const { weekStart, weekEnd } = getWeekBounds(current);
-    weeks.push({ weekStart, weekEnd });
-    current = new Date(weekStart);
-    current.setDate(current.getDate() + 7);
+  let current = getWeekBoundsForDay(start.year, start.month, start.day);
+  while (current.weekStart <= semesterEnd) {
+    weeks.push(current);
+    // The instant after Saturday 23:59:59.999 is the next Sunday 00:00 — DST-safe.
+    current = getWeekBounds(new Date(current.weekEnd.getTime() + 1));
   }
 
   return weeks;
@@ -40,9 +98,10 @@ export function isDateWithinSemester(
   semester: Pick<Semester, "startDate" | "endDate">,
   date: Date = new Date()
 ): boolean {
-  const start = new Date(semester.startDate);
-  const end = new Date(semester.endDate);
-  end.setHours(23, 59, 59, 999);
+  const s = parseClubDate(semester.startDate);
+  const e = parseClubDate(semester.endDate);
+  const start = zonedTime(s.year, s.month - 1, s.day);
+  const end = zonedTime(e.year, e.month - 1, e.day, 23, 59, 59, 999);
   return date >= start && date <= end;
 }
 

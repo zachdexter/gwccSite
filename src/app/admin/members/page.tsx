@@ -29,7 +29,7 @@ function MembersPage() {
   const [semestersLoaded, setSemestersLoaded] = useState(false);
   const [matrixData, setMatrixData] = useState<MatrixData | null>(null);
   const [matrixLoading, setMatrixLoading] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "matrix">("grid");
+  const [viewMode, setViewMode] = useState<"grid" | "matrix">("matrix");
   const [query, setQuery] = useState("");
   const [pending, setPending] = useState<string | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
@@ -161,10 +161,13 @@ function MembersPage() {
     []
   );
 
+  // Find the current week by range rather than exact timestamp equality, so a small
+  // difference in how the server and browser computed bounds can't zero the grid.
   const currentWeekIndex = useMemo(() => {
     if (!matrixData) return -1;
+    const t = currentWeekStart.getTime();
     return matrixData.weeks.findIndex(
-      (w) => new Date(w.weekStart).getTime() === currentWeekStart.getTime()
+      (w) => new Date(w.weekStart).getTime() <= t && t <= new Date(w.weekEnd).getTime()
     );
   }, [matrixData, currentWeekStart]);
 
