@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { MoreVertical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { getAttendanceStatus } from "@/lib/semester";
 
@@ -39,12 +38,10 @@ export function MemberGrid({
   members,
   weekEnd,
   semesterId,
-  onManage,
 }: {
   members: GridMember[];
   weekEnd: Date;
   semesterId: number | null;
-  onManage: (member: GridMember) => void;
 }) {
   if (members.length === 0) {
     return (
@@ -65,19 +62,8 @@ export function MemberGrid({
           <motion.div
             key={m.id}
             variants={item}
-            className="group relative bg-card border border-border rounded-xl overflow-hidden hover:border-gwcc-gold/40 transition-colors"
+            className="bg-card border border-border rounded-xl overflow-hidden hover:border-gwcc-gold/40 transition-colors"
           >
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                onManage(m);
-              }}
-              className="absolute top-2 right-2 z-10 w-7 h-7 flex items-center justify-center rounded-full bg-background/80 text-muted-foreground opacity-0 group-hover:opacity-100 focus:opacity-100 hover:text-foreground transition-opacity"
-              aria-label={`Manage ${m.name}`}
-            >
-              <MoreVertical className="w-4 h-4" />
-            </button>
             <Link
               href={`/admin/members/${m.id}${semesterId ? `?semesterId=${semesterId}` : ""}`}
               className="flex items-center gap-3 p-3"

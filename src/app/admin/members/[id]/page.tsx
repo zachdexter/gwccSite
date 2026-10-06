@@ -2,13 +2,14 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { getSemesterWeeks, getAttendanceStatus } from "@/lib/semester";
 import { useAdminRole } from "@/components/AdminRoleContext";
+import { useConfirm } from "@/components/useConfirm";
 import type { Semester } from "@/lib/db/schema";
 
 type Member = {
@@ -33,6 +34,7 @@ type AttendanceLog = {
 
 function MemberDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const semesterId = searchParams.get("semesterId");
   const backHref = semesterId ? `/admin/members?semesterId=${semesterId}` : "/admin/members";
@@ -44,8 +46,11 @@ function MemberDetailPage() {
   const [loading, setLoading] = useState(true);
   const [addDate, setAddDate] = useState(new Date().toISOString().split("T")[0]);
   const [saving, setSaving] = useState(false);
+  const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
-  const [savingNotes, setSavingNotes] = useState(false);
+  const [savingDetails, setSavingDetails] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const { confirm, ConfirmDialog } = useConfirm();
 
   useEffect(() => {
     async function load() {
@@ -55,6 +60,7 @@ function MemberDetailPage() {
         setMember(data.member);
         setSemesters(data.semesters);
         setLogs(data.logs);
+        setName(data.member.name);
         setNotes(data.member.notes ?? "");
       }
       setLoading(false);
@@ -62,18 +68,63 @@ function MemberDetailPage() {
     load();
   }, [id]);
 
-  async function saveNotes() {
-    setSavingNotes(true);
+  async function saveDetails(e: React.FormEvent) {
+    e.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      toast.error("Name can't be empty");
+      return;
+    }
+    setSavingDetails(true);
     const res = await fetch("/api/members", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: Number(id), notes }),
+      body: JSON.stringify({ id: Number(id), name: trimmedName, notes }),
     });
-    setSavingNotes(false);
+    setSavingDetails(false);
     if (res.ok) {
-      toast.success("Notes saved");
+      const updated: Member = await res.json();
+      setMember(updated);
+      setName(updated.name);
+      toast.success("Saved");
     } else {
-      toast.error("Failed to save notes");
+      toast.error("Failed to save");
+    }
+  }
+
+  async function toggleSubsidized() {
+    if (!member) return;
+    setUpdatingStatus(true);
+    const res = await fetch("/api/members", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: member.id, isSubsidized: !member.isSubsidized }),
+    });
+    setUpdatingStatus(false);
+    if (res.ok) {
+      const updated: Member = await res.json();
+      setMember(updated);
+      toast.success(updated.isSubsidized ? "Subsidy added" : "Subsidy removed");
+    } else {
+      toast.error("Failed to update subsidy status");
+    }
+  }
+
+  async function removeMember() {
+    if (!member) return;
+    if (!(await confirm(`Remove ${member.name} from the active roster?`))) return;
+    setUpdatingStatus(true);
+    const res = await fetch("/api/members", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: member.id }),
+    });
+    setUpdatingStatus(false);
+    if (res.ok) {
+      toast.success(`Removed ${member.name}`);
+      router.push(backHref);
+    } else {
+      toast.error("Failed to remove member");
     }
   }
 
@@ -156,6 +207,7 @@ function MemberDetailPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
+      {ConfirmDialog}
       <Link
         href={backHref}
         className="text-muted-foreground hover:text-foreground text-sm transition-colors"
@@ -191,22 +243,63 @@ function MemberDetailPage() {
       </div>
 
       {role != null && (
-        <div className="bg-card border border-border rounded-lg p-4 space-y-2">
-          <h2 className="text-card-foreground font-semibold text-sm">Notes</h2>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            placeholder="Anything worth remembering about this member…"
-            className="w-full px-3 py-2 rounded-md bg-muted border border-border text-foreground text-sm resize-none"
-          />
-          <Button
-            onClick={saveNotes}
-            disabled={savingNotes}
-            className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90 font-semibold h-8 text-xs px-3"
-          >
-            {savingNotes ? "Saving…" : "Save Notes"}
-          </Button>
+        <div className="bg-card border border-border rounded-lg divide-y divide-border">
+          <form onSubmit={saveDetails} className="p-4 space-y-3">
+            <h2 className="text-card-foreground font-semibold text-sm">Details</h2>
+            <div className="space-y-1">
+              <label htmlFor="member-name" className="text-muted-foreground text-xs">
+                Name
+              </label>
+              <Input
+                id="member-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="bg-muted border-border text-foreground text-sm"
+              />
+            </div>
+            <div className="space-y-1">
+              <label htmlFor="member-notes" className="text-muted-foreground text-xs">
+                Notes
+              </label>
+              <textarea
+                id="member-notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={3}
+                placeholder="Anything worth remembering about this member…"
+                className="w-full px-3 py-2 rounded-md bg-muted border border-border text-foreground text-sm resize-none"
+              />
+            </div>
+            <Button
+              type="submit"
+              disabled={savingDetails}
+              className="bg-gwcc-gold text-gwcc-dark hover:bg-gwcc-gold/90 font-semibold h-8 text-xs px-3"
+            >
+              {savingDetails ? "Saving…" : "Save"}
+            </Button>
+          </form>
+          <div className="p-4 flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={toggleSubsidized}
+              disabled={updatingStatus}
+              className="h-8 text-xs"
+            >
+              {member.isSubsidized ? "Remove subsidy" : "Add subsidy"}
+            </Button>
+            {member.isActive && (
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={removeMember}
+                disabled={updatingStatus}
+                className="h-8 text-xs"
+              >
+                Remove from roster
+              </Button>
+            )}
+          </div>
         </div>
       )}
 

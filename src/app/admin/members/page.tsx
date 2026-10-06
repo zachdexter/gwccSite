@@ -12,7 +12,6 @@ import { SemesterPicker, type Semester } from "@/components/admin/SemesterPicker
 import { SemesterManageSheet } from "@/components/admin/SemesterManageSheet";
 import { SemesterDateWarning } from "@/components/admin/SemesterDateWarning";
 import { AddMemberDialog, type NewMember } from "@/components/admin/AddMemberDialog";
-import { MemberActionsDialog } from "@/components/admin/MemberActionsDialog";
 
 type MatrixData = {
   semester: { id: number; name: string; startDate: string; endDate: string };
@@ -34,7 +33,6 @@ function MembersPage() {
   const [pending, setPending] = useState<string | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
-  const [actionsMember, setActionsMember] = useState<GridMember | null>(null);
 
   const selectedSemesterId = querySemesterId ? Number(querySemesterId) : null;
 
@@ -134,25 +132,6 @@ function MembersPage() {
         ...prev,
         members: [...prev.members, newMatrixMember].sort((a, b) => a.name.localeCompare(b.name)),
       };
-    });
-  }
-
-  function handleSubsidyToggled(memberId: number) {
-    setMatrixData((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        members: prev.members.map((m) =>
-          m.id === memberId ? { ...m, isSubsidized: !m.isSubsidized } : m
-        ),
-      };
-    });
-  }
-
-  function handleMemberRemoved(memberId: number) {
-    setMatrixData((prev) => {
-      if (!prev) return prev;
-      return { ...prev, members: prev.members.filter((m) => m.id !== memberId) };
     });
   }
 
@@ -258,7 +237,6 @@ function MembersPage() {
           members={filteredGridMembers}
           weekEnd={currentWeekEnd}
           semesterId={selectedSemesterId}
-          onManage={setActionsMember}
         />
       ) : (
         <AttendanceMatrix
@@ -297,13 +275,6 @@ function MembersPage() {
       />
 
       <AddMemberDialog open={addOpen} onOpenChange={setAddOpen} onAdded={handleMemberAdded} />
-
-      <MemberActionsDialog
-        member={actionsMember}
-        onOpenChange={(open) => !open && setActionsMember(null)}
-        onSubsidyToggled={handleSubsidyToggled}
-        onRemoved={handleMemberRemoved}
-      />
     </div>
   );
 }

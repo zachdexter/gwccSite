@@ -53,6 +53,11 @@ export async function PATCH(req: Request) {
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
 
   const updates = pick(body, ["name", "email", "isSubsidized", "isActive", "notes"]);
+  if ("name" in updates) {
+    const name = typeof updates.name === "string" ? updates.name.trim() : "";
+    if (!name) return NextResponse.json({ error: "Name required" }, { status: 400 });
+    updates.name = name;
+  }
 
   try {
     const [updated] = await db
