@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { SemesterDateWarning } from "@/components/admin/SemesterDateWarning";
 import { DEFAULT_WEEKLY_REQUIRED, getAttendanceStatus } from "@/lib/semester";
+import { usePolling } from "@/lib/usePolling";
 
 type Member = {
   id: number;
@@ -34,6 +35,7 @@ type AttendanceLog = {
 const COOLDOWN_MS = 2 * 60 * 60 * 1000;
 const UNDO_WINDOW_MS = 5 * 60 * 1000;
 const DUPLICATE_SCORE_THRESHOLD = 0.3;
+const LIVE_REFRESH_MS = 4000;
 
 export default function AttendancePage() {
   const [members, setMembers] = useState<Member[]>([]);
@@ -50,8 +52,15 @@ export default function AttendancePage() {
   const [addMemberDialogOpen, setAddMemberDialogOpen] = useState(false);
   const [newMemberNameInput, setNewMemberNameInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  // Optimistic check-ins whose POST hasn't returned yet; kept through live refreshes.
+  const inFlightLogs = useRef(new Map<number, AttendanceLog>());
+  // Bumped whenever a local check-in/undo starts or finishes, so a refresh that raced it is
+  // discarded instead of briefly undoing what this device just did.
+  const mutationSeq = useRef(0);
 
-  const fetchData = useCallback(async () => {
+  // `silent` is for background refreshes: no toasts, no loading state.
+  const fetchData = useCallback(async (silent = false) => {
+    const seqAtStart = mutationSeq.current;
     try {
       const [membersRes, attendanceRes] = await Promise.all([
         fetch("/api/members"),
@@ -64,6 +73,7 @@ export default function AttendancePage() {
           setNoActiveSemester(true);
           setLoadError(false);
           const membersData: Member[] = membersRes.ok ? await membersRes.json() : [];
+          if (silent && mutationSeq.current !== seqAtStart) return;
           setMembers(membersData.filter((m) => m.isActive));
           setLogs([]);
           return;
@@ -73,28 +83,35 @@ export default function AttendancePage() {
       if (!membersRes.ok || !attendanceRes.ok) throw new Error("Failed to load");
 
       const membersData: Member[] = await membersRes.json();
-      setMembers(membersData.filter((m) => m.isActive));
-
       const attendanceData = await attendanceRes.json();
-      setLogs(attendanceData.logs ?? []);
+      if (silent && mutationSeq.current !== seqAtStart) return;
+
+      setMembers(membersData.filter((m) => m.isActive));
+      setLogs([...(attendanceData.logs ?? []), ...inFlightLogs.current.values()]);
       setActiveSemester(attendanceData.semester ?? null);
       setCurrentWeekRequired(attendanceData.currentWeekRequired ?? DEFAULT_WEEKLY_REQUIRED);
       setLoadError(false);
       setNoActiveSemester(false);
     } catch {
       setLoadError(true);
-      toast.error("Couldn't load check-in data — check your connection", {
-        duration: Infinity,
-        action: { label: "Retry", onClick: () => fetchData() },
-      });
+      if (!silent) {
+        toast.error("Couldn't load check-in data — check your connection", {
+          duration: Infinity,
+          action: { label: "Retry", onClick: () => fetchData() },
+        });
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, []);
 
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  // Keep in sync with check-ins made on other eboard members' devices.
+  const refreshSilently = useCallback(() => fetchData(true), [fetchData]);
+  usePolling(refreshSilently, LIVE_REFRESH_MS, !loading);
 
   const now = new Date();
   const weekStart = new Date(now);
@@ -146,6 +163,8 @@ export default function AttendancePage() {
       loggedAt: new Date().toISOString(),
     };
     setLogs((prev) => [...prev, optimisticLog]);
+    inFlightLogs.current.set(optimisticLog.id, optimisticLog);
+    mutationSeq.current++;
     refocusSearch();
 
     let res: Response;
@@ -156,6 +175,8 @@ export default function AttendancePage() {
         body: JSON.stringify({ memberId: member.id }),
       });
     } catch {
+      inFlightLogs.current.delete(optimisticLog.id);
+      mutationSeq.current++;
       setLogs((prev) => prev.filter((l) => l.id !== optimisticLog.id));
       toast.error(`${member.name}'s check-in didn't save — retry?`, {
         action: { label: "Retry", onClick: () => logAttendance(member) },
@@ -163,10 +184,15 @@ export default function AttendancePage() {
       return;
     }
 
+    inFlightLogs.current.delete(optimisticLog.id);
+    mutationSeq.current++;
+
     if (!res.ok) {
       setLogs((prev) => prev.filter((l) => l.id !== optimisticLog.id));
       if (res.status === 409) {
         toast.warning(`${member.name} was already checked in recently`);
+        // Probably checked in from another device — pull it in so this one shows it too.
+        refreshSilently();
       } else if (res.status === 400) {
         const data = await res.json().catch(() => null);
         toast.error(
@@ -188,6 +214,7 @@ export default function AttendancePage() {
 
   async function undoAttendance(member: Member) {
     refocusSearch();
+    mutationSeq.current++;
     try {
       const res = await fetch("/api/attendance", {
         method: "DELETE",
@@ -206,6 +233,7 @@ export default function AttendancePage() {
       return;
     }
 
+    mutationSeq.current++;
     const recentLog = getRecentLog(member.id);
     if (recentLog) {
       setLogs((prev) => prev.filter((l) => l.id !== recentLog.id));

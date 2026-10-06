@@ -1,12 +1,13 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DEFAULT_WEEKLY_REQUIRED, getWeekBounds } from "@/lib/semester";
 import { toast } from "sonner";
+import { usePolling } from "@/lib/usePolling";
 import { MemberGrid, type GridMember } from "@/components/admin/MemberGrid";
 import { AttendanceMatrix, type MatrixMember, type MatrixWeek } from "@/components/admin/AttendanceMatrix";
 import { SemesterPicker, type Semester } from "@/components/admin/SemesterPicker";
@@ -74,6 +75,27 @@ function MembersPage() {
     load();
   }, [selectedSemesterId]);
 
+  // Bumped on every local edit so a background refresh that raced it is thrown away rather
+  // than briefly reverting the edit.
+  const mutationSeq = useRef(0);
+
+  // Live-refresh the matrix so check-ins from the check-in page (any device) show up.
+  const refreshMatrix = useCallback(async () => {
+    if (!selectedSemesterId || pending !== null) return;
+    const seqAtStart = mutationSeq.current;
+    try {
+      const res = await fetch(`/api/attendance/matrix?semesterId=${selectedSemesterId}`);
+      if (!res.ok) return;
+      const data: MatrixData = await res.json();
+      if (mutationSeq.current !== seqAtStart) return;
+      // Ignore a response for a semester that's no longer selected.
+      setMatrixData((prev) => (prev && prev.semester.id === data.semester.id ? data : prev));
+    } catch {
+      // Background refresh; the next tick will try again.
+    }
+  }, [selectedSemesterId, pending]);
+  usePolling(refreshMatrix, 10_000, !!matrixData);
+
   function setCount(memberId: number, weekIndex: number, count: number) {
     setMatrixData((prev) => {
       if (!prev) return prev;
@@ -93,6 +115,7 @@ function MembersPage() {
     const key = `${member.id}-${weekIndex}`;
     if (pending === key) return;
     setPending(key);
+    mutationSeq.current++;
 
     const week = matrixData.weeks[weekIndex];
     const currentCount = member.weeklyCounts[weekIndex];
@@ -113,6 +136,7 @@ function MembersPage() {
       }),
     });
 
+    mutationSeq.current++;
     if (res.ok) {
       setCount(member.id, weekIndex, currentCount + delta);
     }
@@ -138,6 +162,7 @@ function MembersPage() {
       return false;
     }
     const saved: { required: number; reason: string | null } = await res.json();
+    mutationSeq.current++;
     setMatrixData((prev) =>
       prev
         ? {
@@ -151,6 +176,7 @@ function MembersPage() {
   }
 
   function handleMemberAdded(m: NewMember) {
+    mutationSeq.current++;
     setMatrixData((prev) => {
       if (!prev) return prev;
       const newMatrixMember: MatrixMember = {

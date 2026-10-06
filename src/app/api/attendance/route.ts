@@ -1,8 +1,9 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { attendanceLogs, semesters, weekRequirements } from "@/lib/db/schema";
+import { checkInUnlessRecentQuery, CHECK_IN_COOLDOWN_HOURS } from "@/lib/db/attendance";
 import { getWeekBounds, getWeekRequirement } from "@/lib/semester";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, gte } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -20,8 +21,23 @@ export async function GET() {
       return NextResponse.json({ error: "No active semester" }, { status: 404 });
     }
 
+    // The check-in page polls this, so only send what it uses: this week's logs (counts,
+    // "today", undo) plus anything inside the cooldown window that started last week.
+    const now = new Date();
+    const { weekStart } = getWeekBounds(now);
+    const cooldownStart = new Date(now.getTime() - CHECK_IN_COOLDOWN_HOURS * 60 * 60 * 1000);
+    const since = cooldownStart < weekStart ? cooldownStart : weekStart;
+
     const [logs, overrides] = await Promise.all([
-      db.select().from(attendanceLogs).where(eq(attendanceLogs.semesterId, activeSemester[0].id)),
+      db
+        .select()
+        .from(attendanceLogs)
+        .where(
+          and(
+            eq(attendanceLogs.semesterId, activeSemester[0].id),
+            gte(attendanceLogs.loggedAt, since)
+          )
+        ),
       db
         .select()
         .from(weekRequirements)
@@ -30,7 +46,7 @@ export async function GET() {
 
     const { required: currentWeekRequired } = getWeekRequirement(
       overrides,
-      getWeekBounds(new Date()).weekStart
+      weekStart
     );
 
     return NextResponse.json({ semester: activeSemester[0], logs, currentWeekRequired });
@@ -44,7 +60,8 @@ export async function POST(req: Request) {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { memberId } = await req.json();
+  const body = await req.json();
+  const memberId = Number(body.memberId);
   if (!memberId) return NextResponse.json({ error: "memberId required" }, { status: 400 });
 
   try {
@@ -58,31 +75,23 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "No active semester" }, { status: 400 });
     }
 
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-    const recentCheck = await db
-      .select()
-      .from(attendanceLogs)
-      .where(
-        and(
-          eq(attendanceLogs.memberId, memberId),
-          eq(attendanceLogs.semesterId, activeSemester[0].id)
-        )
-      )
-      .orderBy(desc(attendanceLogs.loggedAt))
-      .limit(1);
-
-    if (recentCheck[0] && recentCheck[0].loggedAt > twoHoursAgo) {
-      return NextResponse.json({ error: "cooldown" }, { status: 409 });
-    }
-
-    const [log] = await db
-      .insert(attendanceLogs)
-      .values({
+    const inserted = await db.execute(
+      checkInUnlessRecentQuery({
         memberId,
         semesterId: activeSemester[0].id,
         loggedBy: session.user.role,
       })
-      .returning();
+    );
+    const insertedId = (inserted.rows[0] as { id: number } | undefined)?.id;
+    if (insertedId === undefined) {
+      return NextResponse.json({ error: "cooldown" }, { status: 409 });
+    }
+
+    // Re-read through Drizzle so loggedAt is mapped to a proper UTC Date like everywhere else.
+    const [log] = await db
+      .select()
+      .from(attendanceLogs)
+      .where(eq(attendanceLogs.id, insertedId));
 
     return NextResponse.json(log, { status: 201 });
   } catch (err) {
