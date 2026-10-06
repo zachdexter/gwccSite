@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { attendanceLogs, semesters } from "@/lib/db/schema";
+import { attendanceLogs, semesters, weekRequirements } from "@/lib/db/schema";
+import { getWeekBounds, getWeekRequirement } from "@/lib/semester";
 import { eq, and, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -19,12 +20,20 @@ export async function GET() {
       return NextResponse.json({ error: "No active semester" }, { status: 404 });
     }
 
-    const logs = await db
-      .select()
-      .from(attendanceLogs)
-      .where(eq(attendanceLogs.semesterId, activeSemester[0].id));
+    const [logs, overrides] = await Promise.all([
+      db.select().from(attendanceLogs).where(eq(attendanceLogs.semesterId, activeSemester[0].id)),
+      db
+        .select()
+        .from(weekRequirements)
+        .where(eq(weekRequirements.semesterId, activeSemester[0].id)),
+    ]);
 
-    return NextResponse.json({ semester: activeSemester[0], logs });
+    const { required: currentWeekRequired } = getWeekRequirement(
+      overrides,
+      getWeekBounds(new Date()).weekStart
+    );
+
+    return NextResponse.json({ semester: activeSemester[0], logs, currentWeekRequired });
   } catch (err) {
     console.error("[attendance:GET]", err);
     return NextResponse.json({ error: "Failed to load attendance." }, { status: 500 });

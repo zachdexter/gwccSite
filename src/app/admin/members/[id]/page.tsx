@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { getSemesterWeeks, getAttendanceStatus } from "@/lib/semester";
+import { getSemesterWeeks, getAttendanceStatus, getWeekRequirement } from "@/lib/semester";
 import { useAdminRole } from "@/components/AdminRoleContext";
 import { useConfirm } from "@/components/useConfirm";
 import type { Semester } from "@/lib/db/schema";
@@ -20,6 +20,13 @@ type Member = {
   isActive: boolean;
   notes: string | null;
   createdAt: string;
+};
+
+type WeekRequirementRow = {
+  semesterId: number;
+  weekStart: string;
+  required: number;
+  reason: string | null;
 };
 
 type SemesterWithCount = Semester & { attendanceCount: number };
@@ -42,6 +49,7 @@ function MemberDetailPage() {
   const [member, setMember] = useState<Member | null>(null);
   const [semesters, setSemesters] = useState<SemesterWithCount[]>([]);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
+  const [requirements, setRequirements] = useState<WeekRequirementRow[]>([]);
   const role = useAdminRole();
   const [loading, setLoading] = useState(true);
   const [addDate, setAddDate] = useState(new Date().toISOString().split("T")[0]);
@@ -60,6 +68,7 @@ function MemberDetailPage() {
         setMember(data.member);
         setSemesters(data.semesters);
         setLogs(data.logs);
+        setRequirements(data.requirements ?? []);
         setName(data.member.name);
         setNotes(data.member.notes ?? "");
       }
@@ -188,6 +197,9 @@ function MemberDetailPage() {
     ? logs.filter((l) => l.semesterId === activeSemester.id)
     : [];
   const weeks = activeSemester ? getSemesterWeeks(activeSemester) : [];
+  const activeRequirements = activeSemester
+    ? requirements.filter((r) => r.semesterId === activeSemester.id)
+    : [];
 
   if (loading) {
     return (
@@ -320,12 +332,15 @@ function MemberDetailPage() {
                   new Date(l.loggedAt) >= weekStart &&
                   new Date(l.loggedAt) <= weekEnd
               ).length;
-              const status = getAttendanceStatus(count, weekEnd);
+              const { required, reason } = getWeekRequirement(activeRequirements, weekStart);
+              const status = getAttendanceStatus(count, weekEnd, required);
               const color =
                 status === "green"
                   ? "text-emerald-400"
                   : status === "yellow"
                   ? "text-yellow-400"
+                  : status === "excused"
+                  ? "text-muted-foreground"
                   : "text-red-400/60";
               const label =
                 weekStart.toLocaleDateString("en-US", {
@@ -341,7 +356,10 @@ function MemberDetailPage() {
                 <div key={i} className="flex items-center gap-3">
                   <span className={`text-xs ${color}`}>●</span>
                   <span className="text-muted-foreground text-xs w-28">{label}</span>
-                  <span className={`text-xs ${color}`}>{count}/2</span>
+                  <span className={`text-xs ${color}`}>
+                    {required === 0 ? `${count} · no requirement` : `${count}/${required}`}
+                  </span>
+                  {reason && <span className="text-muted-foreground text-xs truncate">{reason}</span>}
                 </div>
               );
             })}

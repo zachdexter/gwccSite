@@ -14,6 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { SemesterDateWarning } from "@/components/admin/SemesterDateWarning";
+import { DEFAULT_WEEKLY_REQUIRED, getAttendanceStatus } from "@/lib/semester";
 
 type Member = {
   id: number;
@@ -37,6 +38,7 @@ const DUPLICATE_SCORE_THRESHOLD = 0.3;
 export default function AttendancePage() {
   const [members, setMembers] = useState<Member[]>([]);
   const [logs, setLogs] = useState<AttendanceLog[]>([]);
+  const [currentWeekRequired, setCurrentWeekRequired] = useState(DEFAULT_WEEKLY_REQUIRED);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -76,6 +78,7 @@ export default function AttendancePage() {
       const attendanceData = await attendanceRes.json();
       setLogs(attendanceData.logs ?? []);
       setActiveSemester(attendanceData.semester ?? null);
+      setCurrentWeekRequired(attendanceData.currentWeekRequired ?? DEFAULT_WEEKLY_REQUIRED);
       setLoadError(false);
       setNoActiveSemester(false);
     } catch {
@@ -322,6 +325,7 @@ export default function AttendancePage() {
         )}
         {filtered.map((member) => {
           const count = getThisWeekCount(member.id);
+          const status = getAttendanceStatus(count, weekEnd, currentWeekRequired);
           const cooldown = isOnCooldown(member.id);
           const recentLog = getRecentLog(member.id);
           return (
@@ -369,9 +373,9 @@ export default function AttendancePage() {
               ) : (
                 <span
                   className={`text-sm font-semibold px-2.5 py-1 rounded-full ${
-                    count >= 2
+                    status === "green"
                       ? "bg-emerald-500/15 text-emerald-400"
-                      : count === 1
+                      : status === "yellow"
                       ? "bg-amber-500/15 text-amber-400"
                       : "bg-muted text-muted-foreground"
                   }`}

@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { members, semesters, attendanceLogs } from "@/lib/db/schema";
+import { members, semesters, attendanceLogs, weekRequirements } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -19,13 +19,21 @@ export async function GET(
     const [member] = await db.select().from(members).where(eq(members.id, memberId));
     if (!member) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-    const [allSemesters, logs] = await Promise.all([
+    const [allSemesters, logs, requirements] = await Promise.all([
       db.select().from(semesters).orderBy(desc(semesters.createdAt)),
       db
         .select()
         .from(attendanceLogs)
         .where(eq(attendanceLogs.memberId, memberId))
         .orderBy(desc(attendanceLogs.loggedAt)),
+      db
+        .select({
+          semesterId: weekRequirements.semesterId,
+          weekStart: weekRequirements.weekStart,
+          required: weekRequirements.required,
+          reason: weekRequirements.reason,
+        })
+        .from(weekRequirements),
     ]);
 
     const countMap = new Map<number, number>();
@@ -38,7 +46,7 @@ export async function GET(
       attendanceCount: countMap.get(s.id) ?? 0,
     }));
 
-    return NextResponse.json({ member, semesters: semestersWithCount, logs });
+    return NextResponse.json({ member, semesters: semestersWithCount, logs, requirements });
   } catch (err) {
     console.error("[members/attendance:GET]", err);
     return NextResponse.json({ error: "Failed to load attendance." }, { status: 500 });

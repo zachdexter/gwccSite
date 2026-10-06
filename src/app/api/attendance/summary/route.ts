@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { attendanceLogs, members, semesters } from "@/lib/db/schema";
-import { getSemesterWeeks, getWeekBounds } from "@/lib/semester";
+import { attendanceLogs, members, semesters, weekRequirements } from "@/lib/db/schema";
+import { getSemesterWeeks, getWeekBounds, getWeekRequirement } from "@/lib/semester";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -33,6 +33,11 @@ export async function GET(req: Request) {
       .from(attendanceLogs)
       .where(eq(attendanceLogs.semesterId, semesterId));
 
+    const overrides = await db
+      .select()
+      .from(weekRequirements)
+      .where(eq(weekRequirements.semesterId, semesterId));
+
     const allWeeks = getSemesterWeeks(semester);
     const now = new Date();
     const { weekStart: currentWeekStart } = getWeekBounds(now);
@@ -45,11 +50,13 @@ export async function GET(req: Request) {
       let missedBothDaysCount = 0;
 
       for (const { weekStart, weekEnd } of weeks) {
+        const { required } = getWeekRequirement(overrides, weekStart);
         const count = memberLogs.filter(
           (l) => l.loggedAt >= weekStart && l.loggedAt <= weekEnd
         ).length;
+        if (count >= required) continue;
         if (count === 0) missedBothDaysCount++;
-        else if (count === 1) missedOneDayCount++;
+        else missedOneDayCount++;
       }
 
       return { id: member.id, name: member.name, missedOneDayCount, missedBothDaysCount };

@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { attendanceLogs, members, semesters, subsidyChanges } from "@/lib/db/schema";
-import { getEffectiveSubsidyStatus, getSemesterWeeks } from "@/lib/semester";
+import { attendanceLogs, members, semesters, subsidyChanges, weekRequirements } from "@/lib/db/schema";
+import { getEffectiveSubsidyStatus, getSemesterWeeks, getWeekRequirement } from "@/lib/semester";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
@@ -22,10 +22,11 @@ export async function GET(req: Request) {
 
     if (!semester) return NextResponse.json({ error: "Semester not found" }, { status: 404 });
 
-    const [allMembers, logs, allSubsidyChanges] = await Promise.all([
+    const [allMembers, logs, allSubsidyChanges, overrides] = await Promise.all([
       db.select().from(members).where(eq(members.isActive, true)).orderBy(members.name),
       db.select().from(attendanceLogs).where(eq(attendanceLogs.semesterId, semesterId)),
       db.select().from(subsidyChanges),
+      db.select().from(weekRequirements).where(eq(weekRequirements.semesterId, semesterId)),
     ]);
 
     const weeks = getSemesterWeeks(semester);
@@ -54,7 +55,7 @@ export async function GET(req: Request) {
         startDate: semester.startDate,
         endDate: semester.endDate,
       },
-      weeks,
+      weeks: weeks.map((w) => ({ ...w, ...getWeekRequirement(overrides, w.weekStart) })),
       members: memberResults,
     });
   } catch (err) {

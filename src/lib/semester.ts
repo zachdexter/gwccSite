@@ -115,11 +115,41 @@ export function getEffectiveSubsidyStatus(
   return applicable[0]?.isSubsidized ?? false;
 }
 
+export const DEFAULT_WEEKLY_REQUIRED = 2;
+export const ALLOWED_WEEKLY_REQUIRED = [0, 1, 2] as const;
+
+// "YYYY-MM-DD" for the club-timezone calendar day containing `date`. Used as the key for
+// a week's requirement row (the week's Sunday).
+export function toClubDateString(date: Date): string {
+  const { year, month, day } = zonedParts(date);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${year}-${pad(month)}-${pad(day)}`;
+}
+
+export type WeekRequirementInfo = { required: number; reason: string | null };
+
+// The requirement for the week starting at `weekStart`, falling back to the default when
+// the week has no override row.
+export function getWeekRequirement(
+  overrides: { weekStart: string; required: number; reason: string | null }[],
+  weekStart: Date | string
+): WeekRequirementInfo {
+  const key = toClubDateString(new Date(weekStart));
+  const match = overrides.find((o) => o.weekStart === key);
+  return match
+    ? { required: match.required, reason: match.reason }
+    : { required: DEFAULT_WEEKLY_REQUIRED, reason: null };
+}
+
+export type AttendanceStatus = "green" | "yellow" | "red" | "excused";
+
 export function getAttendanceStatus(
   count: number,
-  weekEnd: Date
-): "green" | "yellow" | "red" {
-  if (count >= 2) return "green";
-  if (count === 1 && !isWeekClosed(weekEnd)) return "yellow";
+  weekEnd: Date,
+  required: number = DEFAULT_WEEKLY_REQUIRED
+): AttendanceStatus {
+  if (required <= 0) return "excused";
+  if (count >= required) return "green";
+  if (count > 0 && !isWeekClosed(weekEnd)) return "yellow";
   return "red";
 }

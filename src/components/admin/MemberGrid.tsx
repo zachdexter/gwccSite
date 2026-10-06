@@ -26,21 +26,18 @@ const statusStyles: Record<string, string> = {
   green: "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
   yellow: "bg-amber-500/15 text-amber-400 border-amber-500/30",
   red: "bg-muted text-muted-foreground border-border",
-};
-
-const statusLabel: Record<string, string> = {
-  green: "2×",
-  yellow: "1×",
-  red: "0×",
+  excused: "bg-muted text-muted-foreground border-border",
 };
 
 export function MemberGrid({
   members,
   weekEnd,
+  required,
   semesterId,
 }: {
   members: GridMember[];
   weekEnd: Date;
+  required: number;
   semesterId: number | null;
 }) {
   if (members.length === 0) {
@@ -57,7 +54,7 @@ export function MemberGrid({
       animate="show"
     >
       {members.map((m) => {
-        const status = getAttendanceStatus(m.currentWeekCount, weekEnd);
+        const status = getAttendanceStatus(m.currentWeekCount, weekEnd, required);
         return (
           <motion.div
             key={m.id}
@@ -75,7 +72,9 @@ export function MemberGrid({
                 <p className="text-card-foreground font-semibold text-sm truncate">{m.name}</p>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <Badge className={`border text-xs ${statusStyles[status]}`}>
-                    {statusLabel[status]} this week
+                    {status === "excused"
+                      ? "No requirement this week"
+                      : `${m.currentWeekCount}/${required} this week`}
                   </Badge>
                   {m.isSubsidized && (
                     <Badge className="bg-gwcc-gold/15 text-gwcc-gold border-gwcc-gold/30 border text-xs">

@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { getAttendanceStatus } from "@/lib/semester";
+import { DEFAULT_WEEKLY_REQUIRED, getAttendanceStatus } from "@/lib/semester";
+import { WeekRequirementDialog } from "./WeekRequirementDialog";
 
 export type MatrixMember = {
   id: number;
@@ -11,13 +13,23 @@ export type MatrixMember = {
   weeklyCounts: number[];
 };
 
-export type MatrixWeek = { weekStart: string; weekEnd: string };
+export type MatrixWeek = {
+  weekStart: string;
+  weekEnd: string;
+  required: number;
+  reason: string | null;
+};
 
 const statusColor: Record<string, string> = {
   green: "text-emerald-400",
   yellow: "text-yellow-400",
   red: "text-red-400/60",
+  excused: "text-muted-foreground",
 };
+
+function requirementChip(required: number) {
+  return required === 0 ? "off" : `${required} req`;
+}
 
 function weekLabel(weekStart: string, weekEnd: string) {
   const start = new Date(weekStart);
@@ -32,13 +44,17 @@ export function AttendanceMatrix({
   semesterId,
   pending,
   onAdjust,
+  onRequirementChange,
 }: {
   members: MatrixMember[];
   weeks: MatrixWeek[];
   semesterId: number;
   pending: string | null;
   onAdjust: (member: MatrixMember, weekIndex: number, delta: 1 | -1) => void;
+  onRequirementChange: (weekIndex: number, required: number, reason: string) => Promise<boolean>;
 }) {
+  const [editingWeek, setEditingWeek] = useState<number | null>(null);
+
   if (members.length === 0) {
     return (
       <div className="text-center text-muted-foreground text-sm py-12">No active members.</div>
@@ -47,6 +63,19 @@ export function AttendanceMatrix({
 
   return (
     <div className="rounded-lg border border-border overflow-auto">
+      <WeekRequirementDialog
+        week={
+          editingWeek === null
+            ? null
+            : {
+                label: weekLabel(weeks[editingWeek].weekStart, weeks[editingWeek].weekEnd),
+                required: weeks[editingWeek].required,
+                reason: weeks[editingWeek].reason,
+              }
+        }
+        onOpenChange={(open) => !open && setEditingWeek(null)}
+        onSave={(required, reason) => onRequirementChange(editingWeek!, required, reason)}
+      />
       <table className="text-sm border-collapse w-full">
         <thead>
           <tr>
@@ -54,11 +83,20 @@ export function AttendanceMatrix({
               Member
             </th>
             {weeks.map((w, i) => (
-              <th
-                key={i}
-                className="border-b border-border px-3 py-2 text-muted-foreground text-xs font-normal whitespace-nowrap text-center"
-              >
-                {weekLabel(w.weekStart, w.weekEnd)}
+              <th key={i} className="border-b border-border p-0 font-normal">
+                <button
+                  type="button"
+                  onClick={() => setEditingWeek(i)}
+                  title={w.reason ?? "Set required sessions for this week"}
+                  className="w-full px-3 py-2 text-muted-foreground hover:text-foreground text-xs whitespace-nowrap text-center transition-colors"
+                >
+                  {weekLabel(w.weekStart, w.weekEnd)}
+                  {w.required !== DEFAULT_WEEKLY_REQUIRED && (
+                    <span className="block mt-0.5 text-[10px] font-semibold text-gwcc-gold">
+                      {requirementChip(w.required)}
+                    </span>
+                  )}
+                </button>
               </th>
             ))}
           </tr>
@@ -80,7 +118,7 @@ export function AttendanceMatrix({
                 </Link>
               </td>
               {m.weeklyCounts.map((count, i) => {
-                const status = getAttendanceStatus(count, new Date(weeks[i].weekEnd));
+                const status = getAttendanceStatus(count, new Date(weeks[i].weekEnd), weeks[i].required);
                 const key = `${m.id}-${i}`;
                 const busy = pending === key;
                 return (

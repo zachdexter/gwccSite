@@ -6,6 +6,7 @@ import {
   timestamp,
   date,
   integer,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const members = pgTable("members", {
@@ -49,6 +50,25 @@ export const attendanceLogs = pgTable(
     loggedAt: timestamp("logged_at").defaultNow().notNull(),
     loggedBy: text("logged_by").notNull(),
   }
+);
+
+// Per-week exceptions to the default weekly attendance requirement (holidays, breaks).
+// A week with no row uses DEFAULT_WEEKLY_REQUIRED from src/lib/semester.ts.
+export const weekRequirements = pgTable(
+  "week_requirements",
+  {
+    id: serial("id").primaryKey(),
+    semesterId: integer("semester_id")
+      .notNull()
+      .references(() => semesters.id, { onDelete: "cascade" }),
+    // The week's Sunday as a club-timezone calendar date.
+    weekStart: date("week_start").notNull(),
+    required: integer("required").notNull(),
+    reason: text("reason"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [unique("week_requirements_semester_week_unique").on(t.semesterId, t.weekStart)]
 );
 
 export const compMembers = pgTable("comp_members", {
@@ -175,3 +195,4 @@ export type FaqQuestion = typeof faqQuestions.$inferSelect;
 export type Alert = typeof alerts.$inferSelect;
 export type ExternalLink = typeof externalLinks.$inferSelect;
 export type SubsidyChange = typeof subsidyChanges.$inferSelect;
+export type WeekRequirement = typeof weekRequirements.$inferSelect;

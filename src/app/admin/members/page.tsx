@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Fuse from "fuse.js";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { getWeekBounds } from "@/lib/semester";
+import { DEFAULT_WEEKLY_REQUIRED, getWeekBounds } from "@/lib/semester";
+import { toast } from "sonner";
 import { MemberGrid, type GridMember } from "@/components/admin/MemberGrid";
 import { AttendanceMatrix, type MatrixMember, type MatrixWeek } from "@/components/admin/AttendanceMatrix";
 import { SemesterPicker, type Semester } from "@/components/admin/SemesterPicker";
@@ -117,6 +118,36 @@ function MembersPage() {
     }
 
     setPending(null);
+  }
+
+  async function changeWeekRequirement(weekIndex: number, required: number, reason: string) {
+    if (!matrixData) return false;
+    const week = matrixData.weeks[weekIndex];
+    const res = await fetch("/api/attendance/requirements", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        semesterId: matrixData.semester.id,
+        weekStart: week.weekStart,
+        required,
+        reason,
+      }),
+    });
+    if (!res.ok) {
+      toast.error("Failed to update week");
+      return false;
+    }
+    const saved: { required: number; reason: string | null } = await res.json();
+    setMatrixData((prev) =>
+      prev
+        ? {
+            ...prev,
+            weeks: prev.weeks.map((w, i) => (i === weekIndex ? { ...w, ...saved } : w)),
+          }
+        : prev
+    );
+    toast.success("Week updated");
+    return true;
   }
 
   function handleMemberAdded(m: NewMember) {
@@ -236,6 +267,11 @@ function MembersPage() {
         <MemberGrid
           members={filteredGridMembers}
           weekEnd={currentWeekEnd}
+          required={
+            currentWeekIndex >= 0
+              ? matrixData.weeks[currentWeekIndex].required
+              : DEFAULT_WEEKLY_REQUIRED
+          }
           semesterId={selectedSemesterId}
         />
       ) : (
@@ -245,6 +281,7 @@ function MembersPage() {
           semesterId={matrixData.semester.id}
           pending={pending}
           onAdjust={adjustCell}
+          onRequirementChange={changeWeekRequirement}
         />
       )}
 
