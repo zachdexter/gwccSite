@@ -32,6 +32,7 @@ function MembersPage() {
   const [matrixLoading, setMatrixLoading] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "matrix">("matrix");
   const [query, setQuery] = useState("");
+  const [subsidizedOnly, setSubsidizedOnly] = useState(false);
   const [pending, setPending] = useState<string | null>(null);
   const [manageOpen, setManageOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
@@ -222,9 +223,19 @@ function MembersPage() {
     [gridMembers]
   );
   const trimmedQuery = query.trim();
-  const filteredGridMembers = trimmedQuery
+  const searchedGridMembers = trimmedQuery
     ? searchFuse.search(trimmedQuery).map((r) => r.item)
     : gridMembers;
+  const filteredGridMembers = subsidizedOnly
+    ? searchedGridMembers.filter((m) => m.isSubsidized)
+    : searchedGridMembers;
+  const filteredMatrixMembers = useMemo(
+    () =>
+      matrixData && subsidizedOnly
+        ? matrixData.members.filter((m) => m.isSubsidized)
+        : matrixData?.members ?? [],
+    [matrixData, subsidizedOnly]
+  );
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">
@@ -271,14 +282,28 @@ function MembersPage() {
             Matrix
           </button>
         </div>
-        {viewMode === "grid" && (
-          <Input
-            placeholder="Search members…"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="bg-card border-border text-foreground placeholder:text-muted-foreground/60 max-w-xs"
-          />
-        )}
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={() => setSubsidizedOnly((v) => !v)}
+            aria-pressed={subsidizedOnly}
+            className={`px-3 py-1.5 rounded-md border text-sm transition-colors ${
+              subsidizedOnly
+                ? "bg-gwcc-gold/15 text-gwcc-gold border-gwcc-gold/30 font-semibold"
+                : "border-border text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Subsidized only
+          </button>
+          {viewMode === "grid" && (
+            <Input
+              placeholder="Search members…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="bg-card border-border text-foreground placeholder:text-muted-foreground/60 max-w-xs"
+            />
+          )}
+        </div>
       </div>
 
       {!semestersLoaded || matrixLoading ? (
@@ -302,7 +327,7 @@ function MembersPage() {
         />
       ) : (
         <AttendanceMatrix
-          members={matrixData.members}
+          members={filteredMatrixMembers}
           weeks={matrixData.weeks}
           semesterId={matrixData.semester.id}
           pending={pending}

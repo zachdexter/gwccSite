@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { DEFAULT_WEEKLY_REQUIRED, getAttendanceStatus } from "@/lib/semester";
@@ -26,6 +26,25 @@ const statusColor: Record<string, string> = {
   red: "text-red-400/60",
   excused: "text-muted-foreground",
 };
+
+// "First L." to keep the sticky name column narrow. Single-word names are left as-is.
+function shortName(name: string) {
+  const parts = name.trim().split(/\s+/);
+  if (parts.length < 2) return parts[0] ?? name;
+  return `${parts[0]} ${parts[parts.length - 1][0].toUpperCase()}.`;
+}
+
+// Short names for display, falling back to the full name when two members would collide.
+function displayNames(members: MatrixMember[]) {
+  const counts = new Map<string, number>();
+  for (const m of members) counts.set(shortName(m.name), (counts.get(shortName(m.name)) ?? 0) + 1);
+  return new Map(
+    members.map((m) => {
+      const short = shortName(m.name);
+      return [m.id, counts.get(short)! > 1 ? m.name : short];
+    })
+  );
+}
 
 function requirementChip(required: number) {
   return required === 0 ? "off" : `${required} req`;
@@ -54,6 +73,7 @@ export function AttendanceMatrix({
   onRequirementChange: (weekIndex: number, required: number, reason: string) => Promise<boolean>;
 }) {
   const [editingWeek, setEditingWeek] = useState<number | null>(null);
+  const names = useMemo(() => displayNames(members), [members]);
 
   if (members.length === 0) {
     return (
@@ -62,7 +82,9 @@ export function AttendanceMatrix({
   }
 
   return (
-    <div className="rounded-lg border border-border overflow-auto">
+    // The table scrolls inside this box (capped below the site header) so the week header row
+    // can stick to its top; sticky can't attach to the page through an overflow container.
+    <div className="rounded-lg border border-border overflow-auto max-h-[calc(100dvh-5rem)]">
       <WeekRequirementDialog
         week={
           editingWeek === null
@@ -79,11 +101,14 @@ export function AttendanceMatrix({
       <table className="text-sm border-collapse w-full">
         <thead>
           <tr>
-            <th className="sticky left-0 bg-card border-b border-r border-border text-left px-4 py-2 text-muted-foreground text-xs font-normal whitespace-nowrap">
+            <th className="sticky top-0 left-0 z-20 bg-card border-r border-border shadow-[inset_0_-1px_0_var(--color-border)] text-left px-3 sm:px-4 py-2 text-muted-foreground text-xs font-normal whitespace-nowrap">
               Member
             </th>
             {weeks.map((w, i) => (
-              <th key={i} className="border-b border-border p-0 font-normal">
+              <th
+                key={i}
+                className="sticky top-0 z-10 bg-card shadow-[inset_0_-1px_0_var(--color-border)] p-0 font-normal"
+              >
                 <button
                   type="button"
                   onClick={() => setEditingWeek(i)}
@@ -104,15 +129,17 @@ export function AttendanceMatrix({
         <tbody>
           {members.map((m) => (
             <tr key={m.id} className="border-b border-border last:border-0">
-              <td className="sticky left-0 bg-card border-r border-border px-4 py-2 whitespace-nowrap">
+              <td className="sticky left-0 bg-card border-r border-border px-3 sm:px-4 py-2 whitespace-nowrap">
                 <Link
                   href={`/admin/members/${m.id}?semesterId=${semesterId}`}
-                  className="text-foreground hover:text-gwcc-gold transition-colors flex items-center gap-2"
+                  title={m.isSubsidized ? `${m.name} (subsidized)` : m.name}
+                  className="text-foreground hover:text-gwcc-gold transition-colors flex items-center gap-1.5 sm:gap-2"
                 >
-                  {m.name}
+                  {names.get(m.id)}
                   {m.isSubsidized && (
-                    <Badge className="bg-gwcc-gold/15 text-gwcc-gold border-gwcc-gold/30 border text-xs">
-                      subsidized
+                    <Badge className="bg-gwcc-gold/15 text-gwcc-gold border-gwcc-gold/30 border text-xs px-1.5 sm:px-2">
+                      <span className="sm:hidden">sub</span>
+                      <span className="hidden sm:inline">subsidized</span>
                     </Badge>
                   )}
                 </Link>
