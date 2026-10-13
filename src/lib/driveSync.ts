@@ -1,8 +1,12 @@
 import { google } from "googleapis";
+import sharp from "sharp";
 import { db } from "@/lib/db";
 import { galleryAlbums, galleryPhotos } from "@/lib/db/schema";
 import { eq, isNotNull } from "drizzle-orm";
 import { uploadToCloudinary, deleteFromCloudinary } from "@/lib/cloudinary";
+
+// Longest edge, in pixels, of photos uploaded to Cloudinary.
+const MAX_DIMENSION = 2560;
 
 function getDriveClient() {
   const apiKey = process.env.GOOGLE_API_KEY;
@@ -22,7 +26,12 @@ async function streamToBuffer(stream: NodeJS.ReadableStream): Promise<Buffer> {
   });
 }
 
-export async function syncGalleryFromDrive(): Promise<{ added: number; removed: number; albums: number }> {
+export async function syncGalleryFromDrive(): Promise<{
+  added: number;
+  removed: number;
+  albums: number;
+  failed: string[];
+}> {
   const { drive, folderId } = getDriveClient();
 
   // List subfolders in the root gallery Drive folder
@@ -36,6 +45,7 @@ export async function syncGalleryFromDrive(): Promise<{ added: number; removed: 
   let added = 0;
   let removed = 0;
   let albumsCreated = 0;
+  const failed: string[] = [];
   const allDriveFileIds: string[] = [];
 
   for (const folder of driveFolders) {
@@ -84,8 +94,16 @@ export async function syncGalleryFromDrive(): Promise<{ added: number; removed: 
           { fileId: file.id, alt: "media" },
           { responseType: "stream" }
         );
-        const buffer = await streamToBuffer(fileRes.data as NodeJS.ReadableStream);
-        const { public_id, secure_url } = await uploadToCloudinary(buffer, "gwcc/gallery", file.name);
+        const original = await streamToBuffer(fileRes.data as NodeJS.ReadableStream);
+        // Camera exports can be 50MB+ PNGs, well over Cloudinary's upload limit,
+        // so normalize everything to a web-sized JPEG before uploading.
+        const buffer = await sharp(original)
+          .rotate()
+          .resize({ width: MAX_DIMENSION, height: MAX_DIMENSION, fit: "inside", withoutEnlargement: true })
+          .jpeg({ quality: 85, mozjpeg: true })
+          .toBuffer();
+        const uploadName = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+        const { public_id, secure_url } = await uploadToCloudinary(buffer, "gwcc/gallery", uploadName);
 
         await db.insert(galleryPhotos).values({
           cloudinaryId: public_id,
@@ -97,6 +115,7 @@ export async function syncGalleryFromDrive(): Promise<{ added: number; removed: 
         added++;
       } catch (err) {
         console.error(`[driveSync] Failed to sync "${file.name}" (${file.id}):`, err);
+        failed.push(file.name);
       }
     }
   }
@@ -120,5 +139,5 @@ export async function syncGalleryFromDrive(): Promise<{ added: number; removed: 
     removed++;
   }
 
-  return { added, removed, albums: albumsCreated };
+  return { added, removed, albums: albumsCreated, failed };
 }

@@ -37,8 +37,13 @@ export default function GalleryAdminPage() {
     try {
       const res = await fetch("/api/sync-gallery", { method: "POST" });
       if (res.ok) {
-        const { added, removed, albums } = await res.json();
+        const { added, removed, albums, failed } = await res.json();
         toast.success(`Synced: +${added} photos, -${removed} removed, ${albums} new albums`);
+        if (failed?.length) {
+          toast.warning(
+            `${failed.length} photo${failed.length === 1 ? "" : "s"} failed to sync: ${failed.join(", ")}`
+          );
+        }
         fetchAlbums();
       } else {
         const { error } = await res.json().catch(() => ({ error: "Sync failed" }));

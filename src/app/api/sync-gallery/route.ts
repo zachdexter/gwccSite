@@ -3,6 +3,9 @@ import { syncGalleryFromDrive } from "@/lib/driveSync";
 import { isValidCronSecret } from "@/lib/cronAuth";
 import { NextResponse } from "next/server";
 
+// Large Drive photos take a while to download and resize.
+export const maxDuration = 300;
+
 async function runSync(req: Request) {
   // Accept Vercel cron secret or a valid admin session
   const authHeader = req.headers.get("authorization");
