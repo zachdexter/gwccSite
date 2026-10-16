@@ -14,7 +14,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { SemesterDateWarning } from "@/components/admin/SemesterDateWarning";
-import { DEFAULT_WEEKLY_REQUIRED, getAttendanceStatus } from "@/lib/semester";
+import { DEFAULT_WEEKLY_REQUIRED, getAttendanceStatus, getWeekBounds } from "@/lib/semester";
 import { usePolling } from "@/lib/usePolling";
 
 type Member = {
@@ -114,12 +114,7 @@ export default function AttendancePage() {
   usePolling(refreshSilently, LIVE_REFRESH_MS, !loading);
 
   const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(now.getDate() - now.getDay());
-  weekStart.setHours(0, 0, 0, 0);
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
+  const { weekStart, weekEnd } = getWeekBounds(now);
 
   const todayStart = new Date(now);
   todayStart.setHours(0, 0, 0, 0);

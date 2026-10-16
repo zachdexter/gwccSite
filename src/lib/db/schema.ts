@@ -61,7 +61,7 @@ export const weekRequirements = pgTable(
     semesterId: integer("semester_id")
       .notNull()
       .references(() => semesters.id, { onDelete: "cascade" }),
-    // The week's Sunday as a club-timezone calendar date.
+    // The week's Monday as a club-timezone calendar date.
     weekStart: date("week_start").notNull(),
     required: integer("required").notNull(),
     reason: text("reason"),

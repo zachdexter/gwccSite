@@ -1,6 +1,6 @@
 import type { Semester, SubsidyChange } from "./db/schema";
 
-// Weeks are Sunday–Saturday in the club's local time. All week math is pinned to this
+// Weeks are Monday–Sunday in the club's local time. All week math is pinned to this
 // zone so the server (UTC on Vercel) and the browser agree on where a week starts.
 const CLUB_TIME_ZONE = "America/New_York";
 
@@ -61,7 +61,8 @@ function parseClubDate(value: string | Date): { year: number; month: number; day
 }
 
 function getWeekBoundsForDay(year: number, month: number, day: number) {
-  const dayOfWeek = new Date(Date.UTC(year, month - 1, day)).getUTCDay(); // 0 = Sunday
+  // Days since Monday: Monday = 0 … Sunday = 6.
+  const dayOfWeek = (new Date(Date.UTC(year, month - 1, day)).getUTCDay() + 6) % 7;
   const weekStart = zonedTime(year, month - 1, day - dayOfWeek);
   const weekEnd = zonedTime(year, month - 1, day - dayOfWeek + 6, 23, 59, 59, 999);
   return { weekStart, weekEnd };
@@ -83,7 +84,7 @@ export function getSemesterWeeks(
   let current = getWeekBoundsForDay(start.year, start.month, start.day);
   while (current.weekStart <= semesterEnd) {
     weeks.push(current);
-    // The instant after Saturday 23:59:59.999 is the next Sunday 00:00 — DST-safe.
+    // The instant after Sunday 23:59:59.999 is the next Monday 00:00 — DST-safe.
     current = getWeekBounds(new Date(current.weekEnd.getTime() + 1));
   }
 
@@ -124,7 +125,7 @@ export const DEFAULT_WEEKLY_REQUIRED = 2;
 export const ALLOWED_WEEKLY_REQUIRED = [0, 1, 2] as const;
 
 // "YYYY-MM-DD" for the club-timezone calendar day containing `date`. Used as the key for
-// a week's requirement row (the week's Sunday).
+// a week's requirement row (the week's Monday).
 export function toClubDateString(date: Date): string {
   const { year, month, day } = zonedParts(date);
   const pad = (n: number) => String(n).padStart(2, "0");

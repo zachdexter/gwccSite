@@ -28,7 +28,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Invalid weekStart" }, { status: 400 });
   }
 
-  // Normalize to the week's Sunday so the key is stable regardless of what the client sent.
+  // Normalize to the week's Monday so the key is stable regardless of what the client sent.
   const weekKey = toClubDateString(getWeekBounds(start).weekStart);
   const trimmedReason = typeof reason === "string" && reason.trim() ? reason.trim() : null;
 
